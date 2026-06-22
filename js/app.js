@@ -72,6 +72,56 @@ async function performSearch(forceRefresh = false) {
     }
 }
 
+// ============ URL PASTE SEARCH ============
+async function searchByUrl() {
+    const url = document.getElementById('urlInput')?.value.trim();
+    if (!url) {
+        showNotification('Please paste a product URL', 'error');
+        return;
+    }
+    
+    if (APP_STATE.isSearching) return;
+    APP_STATE.isSearching = true;
+
+    document.getElementById('loadingSpinner').classList.add('active');
+    document.getElementById('loadingText').textContent = 'Fetching product details and comparing across marketplaces...';
+    document.getElementById('productGrid').innerHTML = '';
+    document.getElementById('bestDealBanner').style.display = 'none';
+    document.getElementById('resultsSection').classList.add('active');
+    document.getElementById('statusText').textContent = 'Analyzing URL...';
+    document.querySelector('.status-dot').style.background = '#F59E0B';
+
+    try {
+        const data = await scraperManager.searchByUrl(url);
+        if (data.products && data.products.length > 0) {
+            APP_STATE.allProducts = data.products;
+            APP_STATE.currentFilter = 'all';
+            applyFiltersAndSort();
+            if (data.matchedGroups && data.matchedGroups.length > 0) {
+                // Optionally highlight exact matches, currently just shows all
+            }
+            showNotification(`Found ${data.products.length} products related to the product`, 'success');
+        } else {
+            document.getElementById('productGrid').innerHTML = `
+                <div class="error-state" style="grid-column: 1/-1;">
+                    <div style="font-size: 48px; margin-bottom: 12px;">🔗</div>
+                    <h3>No matching products found</h3>
+                    <p>The product might not be available on other stores, or the URL could not be recognized.</p>
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error('URL search error:', err);
+        showNotification('Failed to fetch product data from URL', 'error');
+    } finally {
+        APP_STATE.isSearching = false;
+        document.getElementById('loadingSpinner').classList.remove('active');
+        document.getElementById('statusText').textContent = 'Ready';
+        document.querySelector('.status-dot').style.background = '#10B981';
+        updateLastUpdated();
+    }
+}
+
 // ============ FILTER & SORT ============
 function applyFiltersAndSort() {
     let products = [...APP_STATE.allProducts];
@@ -438,7 +488,6 @@ async function showDealsPage(forceRefresh = false) {
     document.getElementById('resultsSection').classList.add('active');
     document.getElementById('searchInput').value = '';
     
-    // Search for popular items
     const popularQueries = ['phone', 'laptop', 'tv', 'headphone', 'mouse'];
     let allProducts = [];
     
@@ -447,7 +496,6 @@ async function showDealsPage(forceRefresh = false) {
         allProducts.push(...products);
     }
     
-    // Remove duplicates and sort by discount
     const uniqueProducts = allProducts.filter((p, i, arr) => 
         arr.findIndex(x => x.name === p.name && x.marketplace === p.marketplace) === i
     );
@@ -466,7 +514,6 @@ async function showDealsPage(forceRefresh = false) {
 // ============ ANALYTICS ============
 function trackClick(marketplace, productName) {
     console.log(`[Click] ${marketplace} - ${productName}`);
-    // Can be extended with Google Analytics or custom tracking
 }
 
 // ============ INITIALIZATION ============
@@ -487,10 +534,16 @@ function init() {
             document.getElementById('searchInput').focus();
         }
     });
+
+    // URL paste button event
+    const urlSearchBtn = document.getElementById('urlSearchBtn');
+    if (urlSearchBtn) {
+        urlSearchBtn.addEventListener('click', searchByUrl);
+    }
     
     updateLastUpdated();
     
-    console.log('🛒 SmartShop BD - Live Price Comparison');
+    console.log('🛒 PricePeekBD - Live Price Comparison');
     console.log('✅ Scrapers ready for: Daraz, StarTech, Ryans, Pickaboo');
     console.log('💡 Press Ctrl+K to search');
     console.log('🔄 Data refreshes automatically');
