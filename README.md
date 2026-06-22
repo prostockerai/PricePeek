@@ -1,19 +1,37 @@
-# PricePeekBD – Peek Before You Pay.
+# 🏷️ PricePeekBD — Peek Before You Pay.
 
-বাংলাদেশের শীর্ষ অনলাইন স্টোরগুলোতে এক ক্লিকে মূল্য তুলনা করুন।
-Support: Daraz, Star Tech, Ryans, Pickaboo, Gadget & Gear, TechLand, Othoba, AjkerDeal, Bikroy.
+> বাংলাদেশের অনলাইন শপিং-এর সেরা দাম এক ক্লিকে।  
+> Compare prices across top online stores in Bangladesh — all in one place.
 
-## 🚀 কিভাবে চালাবেন
-1. `npm install`
-2. `vercel dev` (Vercel CLI দিয়ে লোকাল সার্ভার)
-3. সরাসরি `index.html` ওপেন করলে API কাজ করবে না, কারণ CORS। তাই Vercel বা লোকাল Vercel পরিবেশে রান করুন।
+---
 
-## 📦 ডেপ্লয়
-- GitHub-এ পুরো প্রোজেক্ট পুশ করে Vercel-এ ইম্পোর্ট করুন।
-- Framework: **Other** সেট করুন।
-- Environment Variable লাগবে না।
+## ✨ কী কী করতে পারে (Features)
 
-## 🧑‍💻 টেক স্ট্যাক
-- ফ্রন্টএন্ড: HTML/CSS/JS (স্ট্যাটিক)
-- ব্যাকএন্ড: Vercel Serverless Functions (Node.js + axios + cheerio)
-- স্ক্র্যাপিং: ৪টি বড় মার্কেটপ্লেসের জন্য আলাদা Scraper ক্লাস
+- 🔍 **সার্চ করুন** – যেকোনো পণ্যের নাম লিখুন, একসাথে একাধিক স্টোরের দাম চলে আসবে।
+- 💰 **দাম তুলনা** – কোন দোকানে কতো দাম, কতো ছাড় – টেবিল আকারে দেখুন।
+- 🏆 **বেস্ট ডিল** – ডিসকাউন্ট + কুপন + ক্যাশব্যাক মিলিয়ে সবচেয়ে লাভজনক অফার খুঁজে দেয়।
+- ❤️ **উইশলিস্ট** – লগইন ছাড়াই ব্রাউজারে পছন্দের পণ্য জমা রাখুন।
+- ⚖️ **কম্পেয়ার** – ৫টি পর্যন্ত পণ্য পাশাপাশি রেখে তুলনা করুন।
+- 📱 **মোবাইল ফ্রেন্ডলি** – ফোন, ট্যাব, কম্পিউটার সবখানেই সুন্দর দেখাবে।
+
+---
+
+## 🚀 কিভাবে ইউজ করবেন
+
+1. ওয়েবসাইটে যান: [pricepeekbd.vercel.app](https://pricepeekbd.vercel.app)
+2. সার্চ বক্সে পণ্যের নাম লিখে 🔍 Search চাপুন।
+3. বিভিন্ন স্টোরের লাইভ দাম, কুপন, ক্যাশব্যাক দেখুন।
+4. দরকারে ❤️ দিয়ে উইশলিস্টে রাখুন বা ⚖️ দিয়ে তুলনা করুন।
+
+---
+
+## 🛠️ ডেভেলপারদের জন্য
+
+```bash
+# রিপো ক্লোন
+git clone https://github.com/your-username/pricepeekbd.git
+cd pricepeekbd
+npm install
+
+# লোকালি চালাতে (Vercel CLI লাগবে)
+vercel dev
