@@ -1,4 +1,4 @@
-// api/search.js
+// PricePeekBD API: সব মার্কেটপ্লেসে সার্চ করে ফলাফল দেয়
 const DarazScraper = require('../lib/daraz');
 const StarTechScraper = require('../lib/startech');
 const RyansScraper = require('../lib/ryans');
@@ -11,13 +11,14 @@ const scrapers = [
   new PickabooScraper(),
 ];
 
+// সাধারণ ইন-মেমোরি ক্যাশ (১৫ মিনিট)
 const cache = new Map();
-const CACHE_TTL = 15 * 60 * 1000; // 15 মিনিট
+const CACHE_TTL = 15 * 60 * 1000;
 
 module.exports = async (req, res) => {
   const { q } = req.query;
   if (!q) {
-    res.status(400).json({ error: 'Query parameter q is required' });
+    res.status(400).json({ error: 'q প্যারামিটার আবশ্যক' });
     return;
   }
 
@@ -36,7 +37,7 @@ module.exports = async (req, res) => {
   );
   await Promise.allSettled(promises);
 
-  // যদি কিছুই না পাওয়া যায়, ডেমো ডাটা দেখান
+  // যদি কোনো মার্কেটপ্লেস থেকে ডাটা না আসে, ডেমো ফলব্যাক দেখানো হবে
   if (results.length === 0) {
     results.push({
       id: 'demo1',
