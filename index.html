@@ -5,6 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PricePeekBD - Compare Prices Across Bangladesh</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ============ ছোট কার্ড ওভাররাইড ============ */
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
+            gap: 16px !important;
+        }
+        .product-card {
+            padding: 14px !important;
+        }
+        .product-image-container {
+            height: 140px !important;
+        }
+        .product-image-container img {
+            max-height: 120px !important;
+        }
+        .current-price {
+            font-size: 1.1rem !important;
+        }
+        .product-name {
+            font-size: 0.8rem !important;
+        }
+        .best-badge, .live-badge {
+            font-size: 0.6rem !important;
+            padding: 2px 8px !important;
+        }
+        .btn-visit {
+            font-size: 0.7rem !important;
+            padding: 8px 10px !important;
+        }
+        .btn-wishlist, .btn-compare {
+            padding: 8px 10px !important;
+            font-size: 0.9rem !important;
+        }
+        .marketplace-badge {
+            font-size: 0.7rem !important;
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -34,6 +71,7 @@
             <h1 class="hero-title">Peek Before You Pay.</h1>
             <p class="hero-subtitle">Compare prices across Daraz, Star Tech, Ryans, Pickaboo and more — all in one place.</p>
             
+            <!-- সাধারণ সার্চ -->
             <div class="search-wrapper">
                 <div class="search-container">
                     <input type="text" class="search-input" id="searchInput" 
@@ -45,6 +83,17 @@
                 </div>
             </div>
             
+            <!-- URL পেস্ট করে সার্চ -->
+            <div class="url-search-wrapper" style="max-width:680px; margin:16px auto 0;">
+                <div class="search-container" style="border-radius:50px;">
+                    <input type="text" class="search-input" id="urlInput" 
+                           placeholder="অথবা পণ্যের URL পেস্ট করুন (যেমন startech.com.bd-এর লিংক)">
+                    <button class="search-btn" id="urlSearchBtn" style="padding:12px 24px;">
+                        🔗 Find Product
+                    </button>
+                </div>
+            </div>
+
             <div class="quick-suggestions">
                 <span class="suggestion-chip" onclick="quickSearch('iPhone 15 Pro Max')">📱 iPhone 15 Pro Max</span>
                 <span class="suggestion-chip" onclick="quickSearch('Samsung 55 Inch TV')">📺 Samsung 55" TV</span>
@@ -148,14 +197,10 @@
     <!-- Notification -->
     <div class="notification" id="notification"></div>
 
-    <!-- Footer -->
+    <!-- Footer (Last updated line সরানো হয়েছে) -->
     <footer class="footer">
         <p>PricePeekBD — Peek Before You Pay. Compare prices across Bangladesh's top online stores.</p>
         <p style="margin-top: 4px;">Supports: Daraz • Star Tech • Ryans • Pickaboo • Gadget & Gear • TechLand • Othoba • AjkerDeal • Bikroy</p>
-        <p style="margin-top: 8px; font-size: 11px;">
-            <span id="lastUpdated">Last updated: Just now</span> | 
-            Data refreshes every 15 minutes
-        </p>
     </footer>
 
     <script src="js/utils.js"></script>
