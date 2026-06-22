@@ -2,6 +2,7 @@
 
 function showNotification(message, type = 'info') {
     const notification = document.getElementById('notification');
+    if (!notification) return;
     notification.textContent = message;
     notification.className = `notification ${type} show`;
     setTimeout(() => {
@@ -10,7 +11,7 @@ function showNotification(message, type = 'info') {
 }
 
 function formatPrice(price) {
-    if (!price) return 'N/A';
+    if (!price && price !== 0) return 'N/A';
     return '৳' + Number(price).toLocaleString('en-BD');
 }
 
@@ -19,15 +20,19 @@ function getMarketplaceClass(marketplace) {
 }
 
 function scrollToSearch() {
-    document.getElementById('heroSection').scrollIntoView({ behavior: 'smooth' });
-    document.getElementById('searchInput').focus();
+    const hero = document.getElementById('heroSection');
+    if (hero) hero.scrollIntoView({ behavior: 'smooth' });
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.focus();
 }
 
 function quickSearch(query) {
-    document.getElementById('searchInput').value = query;
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = query;
     performSearch();
     setTimeout(() => {
-        document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        const results = document.getElementById('resultsSection');
+        if (results) results.scrollIntoView({ behavior: 'smooth' });
     }, 300);
 }
 
@@ -45,7 +50,7 @@ function copyToClipboard(text) {
 }
 
 function refreshResults() {
-    const query = document.getElementById('searchInput').value.trim();
+    const query = document.getElementById('searchInput')?.value.trim();
     if (query) {
         performSearch(true);
     } else {
@@ -54,11 +59,13 @@ function refreshResults() {
 }
 
 function updateLastUpdated() {
+    const el = document.getElementById('lastUpdated');
+    if (!el) return; // এলিমেন্ট না থাকলে কিছু করবে না
     const now = new Date();
-    const timeString = now.toLocaleTimeString('en-BD', { 
-        hour: '2-digit', 
+    const timeString = now.toLocaleTimeString('en-BD', {
+        hour: '2-digit',
         minute: '2-digit',
         second: '2-digit'
     });
-    document.getElementById('lastUpdated').textContent = 'Last updated: ' + timeString;
+    el.textContent = 'Last updated: ' + timeString;
 }
