@@ -1,0 +1,18 @@
+PricePeek/
+├── index.html              # Main HTML file
+├── css/
+│   └── style.css          # All styles
+├── js/
+│   ├── app.js             # Main application logic
+│   ├── utils.js           # Utility functions
+│   └── scrapers.js        # Frontend scraper client
+├── server/
+│   ├── server.js          # Express backend server
+│   ├── package.json       # Node.js dependencies
+│   └── scrapers/
+│       ├── baseScraper.js # Base scraper class
+│       ├── daraz.js       # Daraz scraper
+│       ├── startech.js    # StarTech scraper
+│       ├── ryans.js       # Ryans scraper
+│       └── pickaboo.js    # Pickaboo scraper
+└── README.md              # This file

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartShop BD - Live Price Comparison</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="#" class="logo" onclick="location.reload()">
+                <span class="logo-icon">🛒</span>
+                SmartShop BD
+            </a>
+            <nav class="nav-links">
+                <button class="nav-link active" onclick="scrollToSearch()">🔍 Search</button>
+                <button class="nav-link" onclick="showDealsPage()">🏷️ Best Deals</button>
+                <button class="nav-link" onclick="toggleWishlistDrawer()">
+                    ❤️ Wishlist <span id="wishlist-count">0</span>
+                </button>
+                <button class="nav-link" onclick="showComparison()">
+                    ⚖️ Compare <span id="compare-count">0</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <!-- Hero Search Section -->
+        <section class="hero-section" id="heroSection">
+            <h1 class="hero-title">Bangladesh's Smart Price Comparison</h1>
+            <p class="hero-subtitle">Live price comparison from Daraz, StarTech, Ryans, Pickaboo & more</p>
+            
+            <div class="search-wrapper">
+                <div class="search-container">
+                    <input type="text" class="search-input" id="searchInput" 
+                           placeholder="Search products... (e.g., iPhone 15, Samsung TV, Logitech Mouse)"
+                           onkeypress="if(event.key==='Enter') performSearch()">
+                    <button class="search-btn" onclick="performSearch()">
+                        <span>🔍</span> Search
+                    </button>
+                </div>
+            </div>
+            
+            <div class="quick-suggestions">
+                <span class="suggestion-chip" onclick="quickSearch('iPhone 15 Pro Max')">📱 iPhone 15 Pro Max</span>
+                <span class="suggestion-chip" onclick="quickSearch('Samsung 55 Inch TV')">📺 Samsung 55" TV</span>
+                <span class="suggestion-chip" onclick="quickSearch('Logitech G304 Mouse')">🖱️ Logitech G304</span>
+                <span class="suggestion-chip" onclick="quickSearch('Men Polo Shirt')">👕 Men's Polo Shirt</span>
+                <span class="suggestion-chip" onclick="quickSearch('MacBook Air M2')">💻 MacBook Air M2</span>
+                <span class="suggestion-chip" onclick="quickSearch('Sony Headphone')">🎧 Sony Headphone</span>
+            </div>
+        </section>
+
+        <!-- Live Status Indicator -->
+        <div class="live-status" id="liveStatus">
+            <span class="status-dot"></span>
+            <span id="statusText">Ready to search</span>
+        </div>
+
+        <!-- Results Section -->
+        <section class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h2 class="results-count" id="resultsCount">Found 0 products</h2>
+                <div class="results-actions">
+                    <button class="filter-btn" onclick="refreshResults()">🔄 Refresh Prices</button>
+                    <select class="sort-select" id="sortSelect" onchange="sortResults()">
+                        <option value="price_asc">Price: Low to High</option>
+                        <option value="price_desc">Price: High to Low</option>
+                        <option value="discount_desc">Highest Discount</option>
+                        <option value="name_asc">Name: A to Z</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-bar">
+                <button class="filter-btn active" onclick="toggleFilter(this, 'all')">All</button>
+                <button class="filter-btn" onclick="toggleFilter(this, 'Daraz')">Daraz</button>
+                <button class="filter-btn" onclick="toggleFilter(this, 'StarTech')">Star Tech</button>
+                <button class="filter-btn" onclick="toggleFilter(this, 'Ryans')">Ryans</button>
+                <button class="filter-btn" onclick="toggleFilter(this, 'Pickaboo')">Pickaboo</button>
+                <button class="filter-btn" onclick="toggleFilter(this, 'Gadget&Gear')">Gadget & Gear</button>
+                <button class="filter-btn" onclick="toggleFilter(this, 'inStock')">✅ In Stock</button>
+                <button class="filter-btn" onclick="toggleFilter(this, 'discount')">🏷️ Discount</button>
+                <button class="filter-btn" onclick="toggleFilter(this, 'cashback')">💰 Cashback</button>
+            </div>
+
+            <!-- Best Deal Banner -->
+            <div class="best-deal-banner" id="bestDealBanner" style="display:none;">
+                <span class="best-deal-icon">🏆</span>
+                <div class="best-deal-text">
+                    <div class="best-deal-title">Best Deal Found!</div>
+                    <div class="best-deal-price" id="bestDealPrice"></div>
+                    <div class="best-deal-savings" id="bestDealSavings"></div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner"></div>
+                <p id="loadingText">Fetching live prices from all marketplaces...</p>
+            </div>
+
+            <!-- Product Grid -->
+            <div class="product-grid" id="productGrid"></div>
+        </section>
+    </main>
+
+    <!-- Wishlist Drawer -->
+    <div class="wishlist-drawer" id="wishlistDrawer">
+        <div class="drawer-header">
+            <h3>❤️ My Wishlist</h3>
+            <button class="modal-close" onclick="toggleWishlistDrawer()">✕</button>
+        </div>
+        <div class="drawer-body" id="wishlistBody">
+            <p style="color: #9CA3AF; text-align: center; padding: 40px 0;">
+                No items in wishlist yet.<br>Click the heart icon to add products.
+            </p>
+        </div>
+    </div>
+
+    <!-- Comparison Panel -->
+    <div class="comparison-panel" id="comparisonPanel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3>⚖️ Compare Products (<span id="compareCountPanel">0</span>/5)</h3>
+            <div>
+                <button class="filter-btn" onclick="compareProducts()" id="compareBtn" disabled>Compare Now</button>
+                <button class="filter-btn" onclick="clearComparison()">Clear All</button>
+            </div>
+        </div>
+        <div class="comparison-items" id="comparisonItems"></div>
+    </div>
+
+    <!-- Comparison Modal -->
+    <div class="modal-overlay" id="comparisonModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Product Comparison</h2>
+                <button class="modal-close" onclick="closeComparisonModal()">✕</button>
+            </div>
+            <div class="modal-body" id="comparisonModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>SmartShop BD - Live Price Comparison Tool | Real-time data from Bangladeshi marketplaces</p>
+        <p style="margin-top: 4px;">Supports: Daraz • StarTech • Ryans • Pickaboo • Gadget & Gear • TechLand • Othoba • AjkerDeal • Bikroy</p>
+        <p style="margin-top: 8px; font-size: 11px;">
+            <span id="lastUpdated">Last updated: Just now</span> | 
+            Data refreshes every 15 minutes
+        </p>
+    </footer>
+
+    <script src="js/utils.js"></script>
+    <script src="js/scrapers.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
