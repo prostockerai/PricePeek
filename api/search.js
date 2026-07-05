@@ -1,4 +1,3 @@
-// api/search.js
 const DarazScraper = require('../lib/daraz');
 const StarTechScraper = require('../lib/startech');
 const RyansScraper = require('../lib/ryans');
@@ -18,27 +17,31 @@ const CACHE_TTL = 15 * 60 * 1000;
 module.exports = async (req, res) => {
   const { q, url } = req.query;
 
+  if (!q && !url) return res.status(400).json({ error: 'q or url parameter required' });
+
+  // URL মোড (আপাতত অপরিবর্তিত)
   if (url) {
-    // … (previous url handling code)
-    return res.json({ products: [], errors: [{ message: 'URL search not fully ready yet' }] });
+    // ... (আগের URL হ্যান্ডলিং, পরে প্রয়োজনে আপডেট করব)
+    return res.json({ products: [], message: 'URL search is being upgraded' });
   }
 
-  if (!q) return res.status(400).json({ error: 'q parameter required' });
-
+  // সাধারণ সার্চ
   const cacheKey = `search:${q}`;
   const cachedEntry = cache.get(cacheKey);
   if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL) {
     return res.json({ products: cachedEntry.data, cached: true });
   }
 
+  // 🔑 গুরুত্বপূর্ণ: লম্বা নাম থেকে ছোট কীওয়ার্ড তৈরি
+  const searchQuery = productMatcher.extractSearchKey(q) || q;
+  console.log(`Original query: "${q}", using key: "${searchQuery}"`);
+
   const results = [];
   const errors = [];
 
-  // Run scrapers one by one (easier to debug)
   for (const scraper of scrapers) {
     try {
-      console.log(`[${scraper.marketplace}] Searching for: ${q}`);
-      const prods = await scraper.search(q);
+      const prods = await scraper.search(searchQuery);
       results.push(...prods);
       console.log(`[${scraper.marketplace}] Found ${prods.length} products`);
     } catch (err) {
@@ -47,24 +50,21 @@ module.exports = async (req, res) => {
     }
   }
 
-  // --- TEMPORARY: Always add a test product to check API connection ---
-  if (results.length === 0) {
-    results.push({
-      id: 'test_001',
-      name: `🔧 Test Product – API is working for "${q}"`,
-      marketplace: 'System',
-      price: 9999,
-      originalPrice: 12000,
-      discount: 16,
-      inStock: true,
-      image: null,
-      url: '#',
-      coupons: [],
-      cashback: [],
-    });
-  }
-  // --------------------------------------------------------------------
+  // 🎯 মূল সার্চ টার্মের সাথে মিল রেখে প্রোডাক্ট গ্রুপ/হাইলাইট (বিশেষত নির্দিষ্ট মডেল)
+  const originalQuery = q.toLowerCase().trim();
+  const scoredProducts = results.map(p => {
+    const pName = (p.name || '').toLowerCase();
+    const tokens = originalQuery.split(/\s+/);
+    const matchCount = tokens.filter(t => pName.includes(t)).length;
+    const similarity = matchCount / tokens.length;
+    return { ...p, _similarity: similarity };
+  });
 
-  cache.set(cacheKey, { data: results, timestamp: Date.now() });
-  res.json({ products: results, errors, cached: false });
+  // সিমিলারিটি অনুযায়ী সাজানো (বেশি মিল উপরে)
+  scoredProducts.sort((a, b) => b._similarity - a._similarity);
+  // _similarity ফিল্ড ফ্রন্টএন্ড ব্যবহার করতে পারে, কিন্তু বাদ দিলেও চলবে
+  const finalProducts = scoredProducts.map(({ _similarity, ...p }) => p);
+
+  cache.set(cacheKey, { data: finalProducts, timestamp: Date.now() });
+  res.json({ products: finalProducts, errors, cached: false });
 };
