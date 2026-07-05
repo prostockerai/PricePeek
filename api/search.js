@@ -19,22 +19,19 @@ module.exports = async (req, res) => {
 
   if (!q && !url) return res.status(400).json({ error: 'q or url parameter required' });
 
-  // URL মোড (আপাতত অপরিবর্তিত)
   if (url) {
-    // ... (আগের URL হ্যান্ডলিং, পরে প্রয়োজনে আপডেট করব)
     return res.json({ products: [], message: 'URL search is being upgraded' });
   }
 
-  // সাধারণ সার্চ
   const cacheKey = `search:${q}`;
   const cachedEntry = cache.get(cacheKey);
   if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL) {
     return res.json({ products: cachedEntry.data, cached: true });
   }
 
-  // 🔑 গুরুত্বপূর্ণ: লম্বা নাম থেকে ছোট কীওয়ার্ড তৈরি
+  // 🔑 লম্বা নাম থেকে সংক্ষিপ্ত সার্চ কীওয়ার্ড
   const searchQuery = productMatcher.extractSearchKey(q) || q;
-  console.log(`Original query: "${q}", using key: "${searchQuery}"`);
+  console.log(`Original: "${q}" → Searching: "${searchQuery}"`);
 
   const results = [];
   const errors = [];
@@ -50,20 +47,16 @@ module.exports = async (req, res) => {
     }
   }
 
-  // 🎯 মূল সার্চ টার্মের সাথে মিল রেখে প্রোডাক্ট গ্রুপ/হাইলাইট (বিশেষত নির্দিষ্ট মডেল)
+  // প্রাপ্ত পণ্যগুলোকে মূল সার্চ টার্মের সাথে সাদৃশ্য অনুযায়ী সাজানো (অপশনাল)
   const originalQuery = q.toLowerCase().trim();
-  const scoredProducts = results.map(p => {
+  const scored = results.map(p => {
     const pName = (p.name || '').toLowerCase();
     const tokens = originalQuery.split(/\s+/);
     const matchCount = tokens.filter(t => pName.includes(t)).length;
-    const similarity = matchCount / tokens.length;
-    return { ...p, _similarity: similarity };
+    return { ...p, _sim: matchCount / tokens.length };
   });
-
-  // সিমিলারিটি অনুযায়ী সাজানো (বেশি মিল উপরে)
-  scoredProducts.sort((a, b) => b._similarity - a._similarity);
-  // _similarity ফিল্ড ফ্রন্টএন্ড ব্যবহার করতে পারে, কিন্তু বাদ দিলেও চলবে
-  const finalProducts = scoredProducts.map(({ _similarity, ...p }) => p);
+  scored.sort((a, b) => b._sim - a._sim);
+  const finalProducts = scored.map(({ _sim, ...p }) => p);
 
   cache.set(cacheKey, { data: finalProducts, timestamp: Date.now() });
   res.json({ products: finalProducts, errors, cached: false });
