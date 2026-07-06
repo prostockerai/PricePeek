@@ -1,16 +1,4 @@
 // ============ APPLICATION STATE ============
-const APP_STATE = {
-    allProducts: [],
-    filteredProducts: [],
-    wishlist: JSON.parse(localStorage.getItem('wishlist') || '[]'),
-    comparisonList: JSON.parse(localStorage.getItem('comparison') || '[]'),
-    currentFilter: 'all',
-    currentSort: 'price_asc',
-    isSearching: false,
-    lastSearchQuery: '',
-};
-
-// ============ PERFORM SEARCH (keyword) ============
 async function performSearch(forceRefresh = false) {
     const query = document.getElementById('mainSearch').value.trim();
     if (!query) {
@@ -19,6 +7,12 @@ async function performSearch(forceRefresh = false) {
     }
     if (APP_STATE.isSearching) return;
     APP_STATE.isSearching = true;
+
+    // হোম সেকশন হাইড
+    document.getElementById('heroSection').style.display = 'none';
+    document.getElementById('liveStatus').style.display = 'none';
+    const storesSection = document.getElementById('stores-section');
+    if (storesSection) storesSection.style.display = 'none';
 
     document.getElementById('loadingSpinner').classList.add('active');
     document.getElementById('loadingText').textContent = 'Fetching live prices...';
