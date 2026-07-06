@@ -951,12 +951,11 @@ body.dark .modal-overlay { background: rgba(0,0,0,0.7); }
 
 
 
-
 /* স্টোর কার্ড */
 .store-card {
     flex: 0 0 auto;
-    width: 88px;          /* পূর্বে 80px → এখন 88px */
-    height: 60px;         /* পূর্বে 54px → এখন 60px */
+    width: 130px;
+    height: 56px;
     background: var(--white);
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
@@ -967,37 +966,23 @@ body.dark .modal-overlay { background: rgba(0,0,0,0.7); }
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
-/* লোগো ইমেজ – আরও বড় */
+/* লোগো */
 .store-logo {
-    width: 42px;          /* আগে 36px → এখন 42px */
-    height: 42px;
+    max-width: 80px;
+    max-height: 24px;
     object-fit: contain;
 }
 
-/* নেভিগেশন অ্যারো – বর্ডার সরানো + শুধু ছায়া রাখা */
+/* স্লাইডারের গ্যাপ */
+.store-slider {
+    gap: 10px;
+}
+
+/* অ্যারো বাটন – বর্ডার নেই */
 .slider-arrow {
-    background: var(--white);
-    border: none;                    /* ❌ বর্ডার পুরোপুরি সরানো */
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    position: absolute;
-    z-index: 2;
-    color: var(--gray-600);
-    box-shadow: var(--shadow-sm);    /* এখন শুধু শ্যাডো থাকবে */
-    transition: all 0.3s;
+    border: none;
+    box-shadow: var(--shadow-sm);
 }
-
-.slider-arrow:hover {
-    background: var(--primary-light);
-    box-shadow: var(--shadow-md);
-    color: var(--primary);
-}
-
 /* মোবাইল রেসপন্সিভ */
 @media (max-width: 768px) {
     .store-card {
