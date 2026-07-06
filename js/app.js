@@ -20,11 +20,13 @@ async function performSearch(forceRefresh = false) {
     if (APP_STATE.isSearching) return;
     APP_STATE.isSearching = true;
 
-    // হোম সেকশনগুলো লুকানো
-    document.getElementById('heroSection').style.display = 'none';
-    document.getElementById('liveStatus').style.display = 'none';
-    const storesSection = document.getElementById('stores-section');
-    if (storesSection) storesSection.style.display = 'none';
+
+    // শুধু কুইক সাজেশন, লাইভ স্ট্যাটাস ও স্টোর স্লাইডার লুকানো
+const quick = document.getElementById('quickSuggestions');
+if (quick) quick.style.display = 'none';
+document.getElementById('liveStatus').style.display = 'none';
+const storesSection = document.getElementById('stores-section');
+if (storesSection) storesSection.style.display = 'none';
 
     document.getElementById('loadingSpinner').classList.add('active');
     document.getElementById('loadingText').textContent = 'Fetching live prices...';
