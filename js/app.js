@@ -220,19 +220,58 @@ function renderProducts(products) {
     }).join('');
 }
 
+// ============ NEW BEST DEAL FUNCTION (Price, Discount, Rating, Review Count, Sold Count) ============
 function updateBestDeal(products) {
     const banner = document.getElementById('bestDealBanner');
     const inStock = products.filter(p => p.inStock && p.price);
-    if (inStock.length === 0) { banner.style.display = 'none'; return; }
+    if (inStock.length === 0) {
+        banner.style.display = 'none';
+        return;
+    }
+
+    // সর্বনিম্ন দাম (score এ ব্যবহার হবে)
+    const minPrice = Math.min(...inStock.map(p => p.price));
+
+    function getScore(product) {
+        let score = 0;
+
+        // 1. দাম – যত কম তত বেশি (সর্বোচ্চ 40 পয়েন্ট)
+        score += (minPrice / (product.price || 1)) * 40;
+
+        // 2. ডিসকাউন্ট – সরাসরি শতকরা * 0.3 (সর্বোচ্চ 30 পয়েন্ট)
+        score += (product.discount || 0) * 0.3;
+
+        // 3. রেটিং – 5 এর মধ্যে (সর্বোচ্চ 15 পয়েন্ট)
+        if (product.rating) {
+            score += (product.rating / 5) * 15;
+        }
+
+        // 4. রিভিউ সংখ্যা – লগ স্কেলে (সর্বোচ্চ 10 পয়েন্ট)
+        if (product.reviewCount) {
+            score += Math.min(Math.log10(product.reviewCount + 1) * 5, 10);
+        }
+
+        // 5. বিক্রির সংখ্যা – লগ স্কেলে (সর্বোচ্চ 5 পয়েন্ট)
+        if (product.soldCount) {
+            score += Math.min(Math.log10(product.soldCount + 1) * 3, 5);
+        }
+
+        return score;
+    }
+
     const bestDeal = inStock.reduce((best, current) => {
-        const currentScore = (current.discount || 0) + (current.coupons?.length || 0) * 3 + (current.cashback?.length || 0) * 2;
-        const bestScore = (best.discount || 0) + (best.coupons?.length || 0) * 3 + (best.cashback?.length || 0) * 2;
-        return currentScore > bestScore ? current : best;
+        return getScore(current) > getScore(best) ? current : best;
     });
+
     banner.style.display = 'flex';
-    document.getElementById('bestDealPrice').textContent = `${formatPrice(bestDeal.price)} at ${bestDeal.marketplace}`;
+    document.getElementById('bestDealPrice').textContent =
+        `${formatPrice(bestDeal.price)} at ${bestDeal.marketplace}`;
+
     const savings = bestDeal.originalPrice ? bestDeal.originalPrice - bestDeal.price : 0;
-    document.getElementById('bestDealSavings').textContent = savings > 0 ? `Save ${formatPrice(savings)} (${bestDeal.discount}% off)` : 'Best available price!';
+    document.getElementById('bestDealSavings').textContent =
+        savings > 0
+            ? `Save ${formatPrice(savings)} (${bestDeal.discount}% off)`
+            : 'Best available price!';
 }
 
 // ============ WISHLIST ============
