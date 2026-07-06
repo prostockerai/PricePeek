@@ -932,6 +932,7 @@ body.dark .modal-overlay { background: rgba(0,0,0,0.7); }
     position: relative;
     display: flex;
     align-items: center;
+    justify-content: center;
 }
 
 .store-slider {
@@ -939,7 +940,7 @@ body.dark .modal-overlay { background: rgba(0,0,0,0.7); }
     gap: 10px;                     /* আপনার চাওয়া 10px */
     overflow-x: auto;
     scroll-behavior: smooth;
-    padding: 8px 4px;
+    padding: 0 4px;
     flex: 1;
     scrollbar-width: none;
 }
