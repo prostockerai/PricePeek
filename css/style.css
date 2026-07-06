@@ -874,3 +874,31 @@ body {
         font-size: 11px;
     }
 }
+
+
+
+
+.store-card {
+    width: 80px;
+    height: 70px;
+    gap: 0;   /* কোনো ফাঁকা জায়গা নয় */
+    justify-content: center;
+}
+
+.store-logo {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+/* মোবাইলে আরও ছোট */
+@media (max-width: 768px) {
+    .store-card {
+        width: 64px;
+        height: 56px;
+    }
+    .store-logo {
+        width: 36px;
+        height: 36px;
+    }
+}
