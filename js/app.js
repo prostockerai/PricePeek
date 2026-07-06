@@ -1,4 +1,16 @@
 // ============ APPLICATION STATE ============
+const APP_STATE = {
+    allProducts: [],
+    filteredProducts: [],
+    wishlist: JSON.parse(localStorage.getItem('wishlist') || '[]'),
+    comparisonList: JSON.parse(localStorage.getItem('comparison') || '[]'),
+    currentFilter: 'all',
+    currentSort: 'price_asc',
+    isSearching: false,
+    lastSearchQuery: '',
+};
+
+// ============ PERFORM SEARCH (keyword) ============
 async function performSearch(forceRefresh = false) {
     const query = document.getElementById('mainSearch').value.trim();
     if (!query) {
@@ -8,7 +20,7 @@ async function performSearch(forceRefresh = false) {
     if (APP_STATE.isSearching) return;
     APP_STATE.isSearching = true;
 
-    // হোম সেকশন হাইড
+    // হোম সেকশনগুলো লুকানো
     document.getElementById('heroSection').style.display = 'none';
     document.getElementById('liveStatus').style.display = 'none';
     const storesSection = document.getElementById('stores-section');
@@ -55,6 +67,12 @@ async function searchByUrlFromInput(url) {
     if (APP_STATE.isSearching) return;
     APP_STATE.isSearching = true;
 
+    // হোম সেকশনগুলো লুকানো
+    document.getElementById('heroSection').style.display = 'none';
+    document.getElementById('liveStatus').style.display = 'none';
+    const storesSection = document.getElementById('stores-section');
+    if (storesSection) storesSection.style.display = 'none';
+
     document.getElementById('loadingSpinner').classList.add('active');
     document.getElementById('loadingText').textContent = 'Fetching product from URL...';
     document.getElementById('productGrid').innerHTML = '';
@@ -85,7 +103,7 @@ async function searchByUrlFromInput(url) {
         APP_STATE.isSearching = false;
         document.getElementById('loadingSpinner').classList.remove('active');
         document.getElementById('statusText').textContent = 'Ready';
-        document.querySelector('.status-dot').style.background = '#10B981';
+        document.querySelector('.status-dot').style.background = '#10B981');
         updateLastUpdated();
     }
 }
@@ -189,7 +207,7 @@ function renderProducts(products) {
         // রেটিং ও রিভিউ তথ্য (এক দশমিক স্থানে)
         let metaHTML = '';
         if (product.rating) {
-            const ratingFixed = product.rating.toFixed(1); // এক দশমিক
+            const ratingFixed = product.rating.toFixed(1);
             metaHTML = `⭐ ${ratingFixed}`;
             if (product.reviewCount) metaHTML += ` (${product.reviewCount} reviews)`;
             if (product.soldCount) metaHTML += ` • 🔥 ${product.soldCount} sold`;
@@ -420,6 +438,12 @@ function closeComparisonModal() { document.getElementById('comparisonModal').cla
 
 // ============ DEALS PAGE ============
 async function showDealsPage() {
+    // হোম সেকশন লুকানো (ডিল পেজে যাওয়ার সময়ও)
+    document.getElementById('heroSection').style.display = 'none';
+    document.getElementById('liveStatus').style.display = 'none';
+    const storesSection = document.getElementById('stores-section');
+    if (storesSection) storesSection.style.display = 'none';
+
     document.getElementById('loadingSpinner').classList.add('active');
     document.getElementById('resultsSection').classList.add('active');
     const popularQueries = ['phone', 'laptop', 'tv', 'headphone', 'mouse'];
