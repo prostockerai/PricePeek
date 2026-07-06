@@ -103,7 +103,7 @@ async function searchByUrlFromInput(url) {
         APP_STATE.isSearching = false;
         document.getElementById('loadingSpinner').classList.remove('active');
         document.getElementById('statusText').textContent = 'Ready';
-        document.querySelector('.status-dot').style.background = '#10B981');
+        document.querySelector('.status-dot').style.background = '#10B981';
         updateLastUpdated();
     }
 }
