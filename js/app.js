@@ -178,7 +178,7 @@ function sortResults() {
     applyFiltersAndSort();
 }
 
-// ============ RENDER PRODUCTS (আপডেটেড – রেটিং/রিভিউ দেখানো) ============
+// ============ RENDER PRODUCTS (rating with one decimal) ============
 function renderProducts(products) {
     const grid = document.getElementById('productGrid');
     if (products.length === 0) {
@@ -192,10 +192,11 @@ function renderProducts(products) {
         const isCompared = APP_STATE.comparisonList.some(c => c.id === product.id);
         const marketplaceClass = getMarketplaceClass(product.marketplace);
 
-        // রেটিং ও রিভিউ তথ্য
+        // রেটিং ও রিভিউ তথ্য (এক দশমিক স্থানে)
         let metaHTML = '';
         if (product.rating) {
-            metaHTML += `⭐ ${product.rating}`;
+            const ratingFixed = product.rating.toFixed(1); // এক দশমিক
+            metaHTML = `⭐ ${ratingFixed}`;
             if (product.reviewCount) metaHTML += ` (${product.reviewCount} reviews)`;
             if (product.soldCount) metaHTML += ` • 🔥 ${product.soldCount} sold`;
         }
@@ -229,7 +230,7 @@ function renderProducts(products) {
     }).join('');
 }
 
-// ============ UPDATE BEST DEAL (ক্লিকেবল ব্যানার) ============
+// ============ UPDATE BEST DEAL (review, price, sold centered) ============
 function updateBestDeal(products) {
     const banner = document.getElementById('bestDealBanner');
     const inStock = products.filter(p => p.inStock && p.price);
@@ -238,28 +239,59 @@ function updateBestDeal(products) {
         return;
     }
 
-    // আগের মতো স্কোরিং (রেটিং ও অন্যান্য ফ্যাক্টর এখনও চাইলে যুক্ত করতে পারেন)
+    // পরিসংখ্যান বের করা (সর্বোচ্চ রিভিউ, সর্বনিম্ন দাম, সর্বোচ্চ সোল্ড)
+    const maxReview = Math.max(...inStock.map(p => p.reviewCount || 0));
+    const minPrice = Math.min(...inStock.map(p => p.price));
+    const maxSold = Math.max(...inStock.map(p => p.soldCount || 0));
+
+    // স্কোরিং ফাংশন
+    const getScore = (product) => {
+        let score = 0;
+
+        // রিভিউ স্কোর (সর্বোচ্চ 50 পয়েন্ট)
+        if (maxReview > 0 && product.reviewCount) {
+            score += (product.reviewCount / maxReview) * 50;
+        }
+
+        // দাম স্কোর (সর্বোচ্চ 30 পয়েন্ট) – দাম কম হলে বেশি স্কোর
+        if (product.price && minPrice > 0) {
+            score += (minPrice / product.price) * 30;
+        }
+
+        // ডিসকাউন্ট স্কোর (সর্বোচ্চ 15 পয়েন্ট)
+        if (product.discount) {
+            score += (product.discount / 100) * 15;
+        }
+
+        // সোল্ড স্কোর (সর্বোচ্চ 5 পয়েন্ট)
+        if (maxSold > 0 && product.soldCount) {
+            score += (product.soldCount / maxSold) * 5;
+        }
+
+        return score;
+    };
+
     const bestDeal = inStock.reduce((best, current) => {
-        const currentScore = (current.discount || 0);
-        const bestScore = (best.discount || 0);
-        return currentScore > bestScore ? current : best;
+        return getScore(current) > getScore(best) ? current : best;
     });
 
     const savings = bestDeal.originalPrice ? bestDeal.originalPrice - bestDeal.price : 0;
     const savingsText = savings > 0 ? `Save ${formatPrice(savings)} (${bestDeal.discount}% off)` : 'Best available price!';
 
-    // ব্যানারটিকে ক্লিকেবল লিংকে রূপান্তর
+    // ব্যানার কন্টেন্ট (সেন্টার করা)
     banner.innerHTML = `
-        <a href="${bestDeal.url || '#'}" target="_blank" style="display:flex; align-items:center; gap:12px; text-decoration:none; color:white; width:100%;">
+        <a href="${bestDeal.url || '#'}" target="_blank" style="display:flex; align-items:center; justify-content:center; gap:12px; text-decoration:none; color:white; width:100%; text-align:center;">
             <span class="best-deal-icon">🏆</span>
-            <div class="best-deal-text">
+            <div class="best-deal-text" style="text-align:center;">
                 <div class="best-deal-title">Best Deal Found!</div>
                 <div class="best-deal-price">${formatPrice(bestDeal.price)} at ${bestDeal.marketplace}</div>
                 <div class="best-deal-savings">${savingsText}</div>
+                ${bestDeal.reviewCount ? `<div style="font-size:0.8rem; opacity:0.9;">⭐ ${bestDeal.rating ? bestDeal.rating.toFixed(1) : ''} (${bestDeal.reviewCount} reviews)${bestDeal.soldCount ? ` • 🔥 ${bestDeal.soldCount} sold` : ''}</div>` : ''}
             </div>
         </a>
     `;
     banner.style.display = 'flex';
+    banner.style.justifyContent = 'center';
 }
 
 // ============ WISHLIST ============
@@ -379,7 +411,7 @@ function compareProducts() {
                     ${createComparisonRow('Discount', p => p.discount > 0 ? `-${p.discount}%` : 'None')}
                     ${createComparisonRow('Status', p => p.inStock ? '🟢 In Stock' : '🔴 Out of Stock')}
                     ${createComparisonRow('Official Store', p => p.isOfficial ? '✅ Yes' : '❌ No')}
-                    ${createComparisonRow('Rating', p => p.rating ? `⭐ ${p.rating} (${p.reviewCount || 0} reviews)` : 'N/A')}
+                    ${createComparisonRow('Rating', p => p.rating ? `⭐ ${p.rating.toFixed(1)} (${p.reviewCount || 0} reviews)` : 'N/A')}
                     ${createComparisonRow('Coupons', p => p.coupons?.map(c => c.code).join(', ') || 'None')}
                     ${createComparisonRow('Cashback', p => p.cashback?.map(c => `${c.provider} ${c.percentage}%`).join(', ') || 'None')}
                 </tbody>
