@@ -12,85 +12,82 @@ const scrapers = [
 ];
 
 const cache = new Map();
-const CACHE_TTL = 15 * 60 * 1000; // ১৫ মিনিট
+const CACHE_TTL = 15 * 60 * 1000;
+
+// URL থেকে পণ্যের নাম বের করার সহায়ক ফাংশন
+function extractProductNameFromUrl(url) {
+  try {
+    const { pathname } = new URL(url);
+    // শেষ অংশটি নিন, হাইফেন/আন্ডারস্কোর দিয়ে ভাগ করা শব্দগুলোকে জোড়া দিন
+    const lastSegment = pathname.split('/').filter(Boolean).pop();
+    if (!lastSegment) return '';
+    // "-" এবং "_" সরিয়ে ক্লিন টেক্সট তৈরি
+    const cleaned = lastSegment.replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+    return cleaned;
+  } catch (e) {
+    return '';
+  }
+}
 
 module.exports = async (req, res) => {
   const { q, url } = req.query;
 
-  // --- URL দিয়ে সার্চ ---
+  // --- URL মোড ---
   if (url) {
     try {
       const decodedUrl = decodeURIComponent(url);
-      let sourceProduct = null;
 
-      // ১. URL কোন মার্কেটপ্লেসের তা খুঁজে বের করা
-      for (const scraper of scrapers) {
-        // baseUrl থেকে https:// বাদ দিয়ে মিলানো (যাতে https://www.startech.com.bd মেলে)
-        const baseHost = scraper.baseUrl.replace('https://', '').replace('http://', '');
-        if (decodedUrl.includes(baseHost)) {
-          sourceProduct = await scraper.getProductFromUrl(decodedUrl);
-          break;
-        }
+      // প্রথমে URL থেকে পণ্যের নাম বের করার চেষ্টা
+      const productNameFromUrl = extractProductNameFromUrl(decodedUrl);
+      console.log(`[URL] Extracted name from URL: "${productNameFromUrl}"`);
+
+      // পণ্যের নাম থেকে সার্চ কীওয়ার্ড তৈরি
+      const searchQuery = productNameFromUrl 
+        ? productMatcher.extractSearchKey(productNameFromUrl) 
+        : '';
+
+      if (!searchQuery) {
+        return res.json({ products: [], errors: [{ message: 'URL থেকে পণ্যের নাম বের করা যায়নি' }] });
       }
 
-      // ২. সোর্স প্রোডাক্ট না পেলে ফিরিয়ে দেওয়া
-      if (!sourceProduct || !sourceProduct.name) {
-        return res.json({
-          products: [],
-          errors: [{ message: 'এই URL থেকে পণ্য খুঁজে পাওয়া যায়নি। দয়া করে সঠিক পণ্যের লিংক দিন।' }]
-        });
-      }
+      console.log(`[URL] Using search key: "${searchQuery}"`);
 
-      // ৩. সোর্স পণ্যের নাম থেকে গুরুত্বপূর্ণ কীওয়ার্ড বের করা
-      const searchQuery = productMatcher.extractSearchKey(sourceProduct.name);
-      console.log(`[URL] পণ্য পেয়েছি: "${sourceProduct.name}" → সার্চ কী: "${searchQuery}"`);
-
-      // ৪. সব মার্কেটপ্লেসে সেই কীওয়ার্ড দিয়ে সার্চ
+      // সব মার্কেটপ্লেসে সেই কীওয়ার্ড দিয়ে সার্চ
       const results = [];
       const errors = [];
       for (const scraper of scrapers) {
         try {
           const prods = await scraper.search(searchQuery);
           results.push(...prods);
-          console.log(`[${scraper.marketplace}] ${prods.length} পণ্য পাওয়া গেছে`);
+          console.log(`[${scraper.marketplace}] Found ${prods.length} products`);
         } catch (err) {
-          console.error(`[${scraper.marketplace}] ত্রুটি:`, err.message);
           errors.push({ marketplace: scraper.marketplace, error: err.message });
         }
       }
 
-      // ৫. যদি কোনো ফলাফল না আসে, অন্তত সোর্স পণ্যটি দেখানো (অন্যান্য মার্কেটপ্লেসে না পাওয়া গেলে)
-      if (results.length === 0) {
-        results.push(sourceProduct);
-      }
-
-      // ৬. মূল ইউজারের দেয়া URL-এর পণ্যের সাথে মিল রেখে সাজানো (অপশনাল)
-      const originalQuery = sourceProduct.name.toLowerCase().trim();
-      const scored = results.map(p => {
-        const pName = (p.name || '').toLowerCase();
-        const tokens = originalQuery.split(/\s+/);
-        const matchCount = tokens.filter(t => pName.includes(t)).length;
-        return { ...p, _sim: matchCount / tokens.length };
-      });
-      scored.sort((a, b) => b._sim - a._sim);
-      const finalProducts = scored.map(({ _sim, ...p }) => p);
+      // সোর্স প্রোডাক্ট হিসেবে একটি অবজেক্ট তৈরি করা (যাতে ফ্রন্টএন্ডে দেখানোর মতো কিছু থাকে)
+      const sourceProduct = {
+        name: productNameFromUrl,
+        url: decodedUrl,
+        marketplace: 'Unknown (from URL)',
+        price: null,
+        inStock: true,
+      };
 
       return res.json({
-        products: finalProducts,
-        sourceProduct: sourceProduct,    // ফ্রন্টএন্ড চাইলে "অরিজিনাল প্রোডাক্ট" হাইলাইট করতে পারে
+        products: results,
+        sourceProduct,
         errors: errors.length > 0 ? errors : undefined,
         cached: false,
       });
     } catch (err) {
-      console.error('[URL] গুরুতর ত্রুটি:', err);
-      return res.status(500).json({ error: 'URL প্রক্রিয়াকরণে সমস্যা হয়েছে' });
+      console.error('[URL] Error:', err);
+      return res.status(500).json({ error: 'URL প্রক্রিয়াকরণে সমস্যা' });
     }
   }
 
-  // --- সাধারণ কীওয়ার্ড সার্চ ---
-  if (!q) {
-    return res.status(400).json({ error: 'q বা url প্যারামিটার দিতে হবে' });
-  }
+  // --- সাধারণ সার্চ (q) ---
+  if (!q) return res.status(400).json({ error: 'q or url parameter required' });
 
   const cacheKey = `search:${q}`;
   const cachedEntry = cache.get(cacheKey);
@@ -98,25 +95,20 @@ module.exports = async (req, res) => {
     return res.json({ products: cachedEntry.data, cached: true });
   }
 
-  // লম্বা নামকে ছোট কীওয়ার্ডে রূপান্তর
   const searchQuery = productMatcher.extractSearchKey(q) || q;
-  console.log(`Original: "${q}" → Searching: "${searchQuery}"`);
+  console.log(`Original: "${q}" -> Searching: "${searchQuery}"`);
 
   const results = [];
   const errors = [];
-
   for (const scraper of scrapers) {
     try {
       const prods = await scraper.search(searchQuery);
       results.push(...prods);
-      console.log(`[${scraper.marketplace}] Found ${prods.length} products`);
     } catch (err) {
-      console.error(`[${scraper.marketplace}] Error:`, err.message);
       errors.push({ marketplace: scraper.marketplace, error: err.message });
     }
   }
 
-  // সাদৃশ্য অনুযায়ী সাজানো
   const originalQuery = q.toLowerCase().trim();
   const scored = results.map(p => {
     const pName = (p.name || '').toLowerCase();
@@ -128,5 +120,5 @@ module.exports = async (req, res) => {
   const finalProducts = scored.map(({ _sim, ...p }) => p);
 
   cache.set(cacheKey, { data: finalProducts, timestamp: Date.now() });
-  res.json({ products: finalProducts, errors, cached: false });
+  res.json({ products: finalProducts, errors: errors.length ? errors : undefined, cached: false });
 };
