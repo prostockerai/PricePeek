@@ -949,10 +949,13 @@ body.dark .modal-overlay { background: rgba(0,0,0,0.7); }
     display: none;
 }
 
+
+
+
 .store-card {
     flex: 0 0 auto;
-    width: 72px;
-    height: 48px;
+    width: 80px;         /* আগে 72px → 80px (প্রায় 11% বৃদ্ধি) */
+    height: 54px;        /* আগে 48px → 54px (10% বৃদ্ধি) */
     background: var(--white);
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
@@ -963,50 +966,37 @@ body.dark .modal-overlay { background: rgba(0,0,0,0.7); }
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
-.store-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-}
-
 .store-logo {
-    width: 40px;
-    height: 32px;
+    width: 36px;         /* আগে 32px → 36px */
+    height: 36px;
     object-fit: contain;
 }
 
-.slider-arrow {
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
+/* স্লাইডারের ভিতরে কার্ড সেন্টার করতে (যখন জায়গা বেশি) */
+.store-slider {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    position: absolute;
-    z-index: 2;
-    color: var(--gray-600);
-    box-shadow: var(--shadow-sm);
-    transition: all 0.3s;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 8px 4px;
+    flex: 1;
+    justify-content: center;  /* ✅ এটি যোগ করলে কার্ড মাঝখানে আসবে (তবে স্ক্রলিং সমস্যা হতে পারে – চাইলে রাখতে পারেন) */
+    scrollbar-width: none;
 }
 
-.slider-arrow:hover {
-    background: var(--primary-light);
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
-.slider-arrow.left { left: -16px; }
-.slider-arrow.right { right: -16px; }
-
+/* মোবাইলের জন্যও একটু বাড়ানো */
 @media (max-width: 768px) {
-    .slider-arrow { width: 28px; height: 28px; }
-    .slider-arrow.left { left: -12px; }
-    .slider-arrow.right { right: -12px; }
-    .store-card { width: 64px; height: 56px; }
-    .store-logo { width: 32px; height: 32px; }
+    .store-card {
+        width: 70px;
+        height: 48px;
+    }
+    .store-logo {
+        width: 30px;
+        height: 30px;
+    }
 }
+
+
 
 /* --- ছোট প্রোডাক্ট কার্ড (ফাইনাল ওভাররাইড) --- */
 .product-grid {
