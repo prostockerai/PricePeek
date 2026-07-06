@@ -1067,7 +1067,7 @@ body.dark .modal-overlay { background: rgba(0,0,0,0.7); }
     background: var(--white);
     border-top: 1px solid var(--gray-200);
     padding: 40px 24px 20px;
-    margin-top: 60px;
+    margin-top: 40px;
     text-align: left;
     transition: background 0.3s;
 }
