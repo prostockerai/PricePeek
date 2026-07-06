@@ -1,3 +1,5 @@
+// ============ UTILITY FUNCTIONS ============
+
 function showNotification(message, type = 'info') {
     const notification = document.getElementById('notification');
     if (!notification) return;
