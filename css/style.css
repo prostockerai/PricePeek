@@ -879,54 +879,68 @@ body {
 
 
 
-/* আগের ওভাররাইডের জায়গায় এগুলো বসান */
+/* কার্ড গ্রিড: একটু সরু ও মাঝখানে */
 .product-grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
     gap: 14px !important;
-    justify-content: center;  /* কার্ডগুলো সেন্টারে আনতে */
+    justify-content: center;
 }
 
+/* কার্ড নিজেই – কম প্যাডিং, ছোট উচ্চতা */
 .product-card {
-    padding: 12px !important;
-    text-align: center;      /* নাম, দাম ইত্যাদি সেন্টার (ঐচ্ছিক) */
+    padding: 10px !important;
+    text-align: center;
 }
 
+/* ছবির কন্টেইনার – উচ্চতা কম, ফ্লেক্স সেন্টারিং */
 .product-image-container {
-    height: 120px !important;  /* উচ্চতা আরও কম */
+    height: 100px !important;   /* আগের চেয়ে আরও কম */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    background: var(--gray-50);
-    border-radius: 8px;
-    margin-bottom: 8px;
+    background: var(--gray-50);  /* প্রয়োজন অনুসারে */
+    border-radius: 6px;
+    margin-bottom: 6px;
+    overflow: hidden;            /* ছবি বড় হলে কেটে যাবে না, তবে ভিতরেই থাকবে */
 }
 
+/* ছবি – কন্টেইনারে ফিট, সেন্টার্ড */
 .product-image-container img {
-    max-height: 100px !important;
     max-width: 90% !important;
+    max-height: 90px !important;
     object-fit: contain;
+    display: block;
 }
 
-.current-price {
-    font-size: 1rem !important;
-}
-
+/* নাম – ছোট ফন্ট, এক লাইনে সীমাবদ্ধ (ঐচ্ছিক) */
 .product-name {
     font-size: 0.75rem !important;
-    line-height: 1.3;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;          /* এক লাইন */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 4px;
 }
 
+/* দামের ফন্ট একটু ছোট */
+.current-price {
+    font-size: 0.95rem !important;
+}
+
+/* বাটন ছোট */
 .btn-visit {
-    font-size: 0.7rem !important;
-    padding: 6px 8px !important;
+    font-size: 0.65rem !important;
+    padding: 5px 8px !important;
 }
 
 .btn-wishlist, .btn-compare {
-    padding: 6px 8px !important;
+    padding: 5px 8px !important;
     font-size: 0.8rem !important;
 }
 
+/* ব্যাজ ছোট */
 .marketplace-badge {
-    font-size: 0.65rem !important;
-    padding: 2px 8px !important;
+    font-size: 0.6rem !important;
+    padding: 2px 6px !important;
 }
