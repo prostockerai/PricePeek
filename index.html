@@ -5,258 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PricePeekBD - Compare Prices Across Bangladesh</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- Inline Dark/Light Mode & Slider Styles -->
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --primary-light: #eff6ff;
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text: #0f172a;
-            --text-secondary: #475569;
-            --border: #e2e8f0;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
-            --transition: 0.3s ease;
-        }
-
-        body.dark {
-            --bg: #0f172a;
-            --surface: #1e293b;
-            --text: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --border: #334155;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-            --shadow: 0 1px 3px rgba(0,0,0,0.4);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.4);
-        }
-
-        body {
-            background: var(--bg);
-            color: var(--text);
-            transition: background var(--transition), color var(--transition);
-        }
-
-        .header, .footer, .live-status, .product-card, .comparison-panel, .modal, .wishlist-drawer, .hero-section, .quick-suggestions .suggestion-chip, .filter-btn, .sort-select, .search-container, .best-deal-banner {
-            transition: background var(--transition), color var(--transition), border-color var(--transition), box-shadow var(--transition);
-        }
-
-        /* Dark Mode Overrides for specific elements */
-        body.dark .header {
-            background: rgba(30,41,59,0.9);
-            backdrop-filter: blur(8px);
-        }
-        body.dark .product-card {
-            background: var(--surface);
-        }
-        body.dark .search-container {
-            background: var(--surface);
-        }
-        body.dark .suggestion-chip {
-            background: var(--surface);
-            border-color: var(--border);
-            color: var(--text-secondary);
-        }
-        body.dark .filter-btn {
-            background: var(--surface);
-            border-color: var(--border);
-            color: var(--text-secondary);
-        }
-        body.dark .sort-select {
-            background: var(--surface);
-            border-color: var(--border);
-            color: var(--text-secondary);
-        }
-        body.dark .best-deal-banner {
-            background: linear-gradient(135deg, #065f46, #059669);
-        }
-        body.dark .footer {
-            border-color: var(--border);
-        }
-        body.dark .modal-overlay {
-            background: rgba(0,0,0,0.7);
-        }
-
-        /* Toggle Button */
-        .theme-toggle {
-            background: none;
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            width: 38px;
-            height: 38px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: var(--text);
-            font-size: 1.2rem;
-            transition: all var(--transition);
-            margin-left: 8px;
-        }
-        .theme-toggle:hover {
-            background: var(--primary-light);
-            border-color: var(--primary);
-        }
-
-        /* Supported Stores Slider */
-        .stores-section {
-            padding: 40px 24px;
-            max-width: 1280px;
-            margin: 0 auto;
-        }
-        .stores-title {
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 24px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .slider-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        .store-slider {
-            display: flex;
-            gap: 24px;
-            overflow-x: auto;
-            scroll-behavior: smooth;
-            padding: 12px 8px;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
-            white-space: nowrap;
-            flex: 1;
-        }
-        .store-slider::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
-        }
-        .store-card {
-            flex: 0 0 auto;
-            width: 100px;
-            height: 80px;
-            background: var(--surface);
-            border-radius: 12px;
-            box-shadow: var(--shadow-sm);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: transform var(--transition), box-shadow var(--transition);
-            cursor: default;
-            border: 1px solid var(--border);
-        }
-        .store-card:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-lg);
-        }
-        .store-icon {
-            font-size: 28px;
-            line-height: 1;
-        }
-        .store-name {
-            font-size: 0.7rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            white-space: nowrap;
-        }
-        .slider-arrow {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: var(--shadow-sm);
-            transition: all var(--transition);
-            position: absolute;
-            z-index: 2;
-            color: var(--text);
-        }
-        .slider-arrow:hover {
-            background: var(--primary-light);
-            border-color: var(--primary);
-        }
-        .slider-arrow.left {
-            left: -18px;
-        }
-        .slider-arrow.right {
-            right: -18px;
-        }
-        @media (max-width: 768px) {
-            .slider-arrow {
-                width: 32px;
-                height: 32px;
-            }
-            .slider-arrow.left { left: -12px; }
-            .slider-arrow.right { right: -12px; }
-            .store-card {
-                width: 80px;
-                height: 70px;
-            }
-        }
-
-        /* Footer Refinements */
-        .footer {
-            background: var(--surface);
-            border-top: 1px solid var(--border);
-            padding: 48px 24px 24px;
-            margin-top: 60px;
-            text-align: left;
-        }
-        .footer-grid {
-            max-width: 1280px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 32px;
-        }
-        .footer-col h4 {
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: var(--text);
-        }
-        .footer-col p, .footer-col a {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            text-decoration: none;
-            display: block;
-            margin-bottom: 6px;
-            transition: color var(--transition);
-        }
-        .footer-col a:hover {
-            color: var(--primary);
-        }
-        .footer-bottom {
-            text-align: center;
-            padding-top: 32px;
-            border-top: 1px solid var(--border);
-            margin-top: 32px;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-        .footer-logo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 8px;
-        }
-        .tagline {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-        }
-    </style>
 </head>
 <body>
     <!-- Header -->
@@ -318,43 +66,24 @@
             <span id="statusText">Ready to search</span>
         </div>
 
-
- <!-- Supported Stores Slider -->
-<section class="stores-section">
-    <h3 class="stores-title">Supported Stores</h3>
-    <div class="slider-container">
-        <button class="slider-arrow left" onclick="slideStores(-1)">❮</button>
-        <div class="store-slider" id="storeSlider">
-            <!-- শুধু লোগো, নিচে কোনো নাম নেই -->
-            <div class="store-card">
-                <img src="images/stores/daraz.png" alt="Daraz" class="store-logo">
+        <!-- Supported Stores Slider -->
+        <section class="stores-section">
+            <h3 class="stores-title">Supported Stores</h3>
+            <div class="slider-container">
+                <button class="slider-arrow left" onclick="slideStores(-1)">❮</button>
+                <div class="store-slider" id="storeSlider">
+                    <div class="store-card"><img src="images/stores/daraz.png" alt="Daraz" class="store-logo"></div>
+                    <div class="store-card"><img src="images/stores/startech.png" alt="Star Tech" class="store-logo"></div>
+                    <div class="store-card"><img src="images/stores/ryans.png" alt="Ryans" class="store-logo"></div>
+                    <div class="store-card"><img src="images/stores/pickaboo.png" alt="Pickaboo" class="store-logo"></div>
+                    <div class="store-card"><img src="images/stores/gadgetgear.png" alt="Gadget & Gear" class="store-logo"></div>
+                    <div class="store-card"><img src="images/stores/techland.png" alt="TechLand" class="store-logo"></div>
+                    <div class="store-card"><img src="images/stores/othoba.png" alt="Othoba" class="store-logo"></div>
+                    <div class="store-card"><img src="images/stores/ajkerdeal.png" alt="AjkerDeal" class="store-logo"></div>
+                </div>
+                <button class="slider-arrow right" onclick="slideStores(1)">❯</button>
             </div>
-            <div class="store-card">
-                <img src="images/stores/startech.png" alt="Star Tech" class="store-logo">
-            </div>
-            <div class="store-card">
-                <img src="images/stores/ryans.png" alt="Ryans" class="store-logo">
-            </div>
-            <div class="store-card">
-                <img src="images/stores/pickaboo.png" alt="Pickaboo" class="store-logo">
-            </div>
-            <div class="store-card">
-                <img src="images/stores/gadgetgear.png" alt="Gadget & Gear" class="store-logo">
-            </div>
-            <div class="store-card">
-                <img src="images/stores/techland.png" alt="TechLand" class="store-logo">
-            </div>
-            <div class="store-card">
-                <img src="images/stores/othoba.png" alt="Othoba" class="store-logo">
-            </div>
-            <div class="store-card">
-                <img src="images/stores/ajkerdeal.png" alt="AjkerDeal" class="store-logo">
-            </div>
-        </div>
-        <button class="slider-arrow right" onclick="slideStores(1)">❯</button>
-    </div>
-</section>
-        
+        </section>
 
         <!-- Results Section -->
         <section class="results-section" id="resultsSection">
@@ -481,21 +210,17 @@
     <script src="js/scrapers.js"></script>
     <script src="js/app.js"></script>
     <script>
-        // Dark/Light Mode Toggle
+        // ডার্ক/লাইট মোড টগল
+        const body = document.body;
         const toggleBtn = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
-        const body = document.body;
-
-        // Check saved preference
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') {
             body.classList.add('dark');
             themeIcon.textContent = '☀️';
         } else {
-            body.classList.remove('dark');
             themeIcon.textContent = '🌙';
         }
-
         toggleBtn.addEventListener('click', () => {
             body.classList.toggle('dark');
             if (body.classList.contains('dark')) {
@@ -507,17 +232,13 @@
             }
         });
 
-        // Store Slider Navigation
+        // স্টোর স্লাইডার ন্যাভিগেশন
         function slideStores(direction) {
             const slider = document.getElementById('storeSlider');
-            const scrollAmount = 150; // adjust based on card width
-            slider.scrollBy({
-                left: direction * scrollAmount,
-                behavior: 'smooth'
-            });
+            slider.scrollBy({ left: direction * 140, behavior: 'smooth' });
         }
 
-        // Existing smart search handling (integrates with main input)
+        // স্মার্ট সার্চ (URL vs সাধারণ শব্দ)
         function handleSmartSearch() {
             const value = document.getElementById('mainSearch').value.trim();
             if (!value) {
@@ -528,7 +249,6 @@
             if (isURL) {
                 searchByUrlFromInput(value);
             } else {
-                // Use the original search input value for backward compatibility
                 document.getElementById('searchInput')?.setAttribute('value', value);
                 performSearch();
             }
