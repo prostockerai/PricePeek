@@ -878,27 +878,55 @@ body {
 
 
 
-.store-card {
-    width: 80px;
-    height: 70px;
-    gap: 0;   /* কোনো ফাঁকা জায়গা নয় */
-    justify-content: center;
+
+/* আগের ওভাররাইডের জায়গায় এগুলো বসান */
+.product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+    gap: 14px !important;
+    justify-content: center;  /* কার্ডগুলো সেন্টারে আনতে */
 }
 
-.store-logo {
-    width: 48px;
-    height: 48px;
+.product-card {
+    padding: 12px !important;
+    text-align: center;      /* নাম, দাম ইত্যাদি সেন্টার (ঐচ্ছিক) */
+}
+
+.product-image-container {
+    height: 120px !important;  /* উচ্চতা আরও কম */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: var(--gray-50);
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.product-image-container img {
+    max-height: 100px !important;
+    max-width: 90% !important;
     object-fit: contain;
 }
 
-/* মোবাইলে আরও ছোট */
-@media (max-width: 768px) {
-    .store-card {
-        width: 64px;
-        height: 56px;
-    }
-    .store-logo {
-        width: 36px;
-        height: 36px;
-    }
+.current-price {
+    font-size: 1rem !important;
+}
+
+.product-name {
+    font-size: 0.75rem !important;
+    line-height: 1.3;
+}
+
+.btn-visit {
+    font-size: 0.7rem !important;
+    padding: 6px 8px !important;
+}
+
+.btn-wishlist, .btn-compare {
+    padding: 6px 8px !important;
+    font-size: 0.8rem !important;
+}
+
+.marketplace-badge {
+    font-size: 0.65rem !important;
+    padding: 2px 8px !important;
 }
