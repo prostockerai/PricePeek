@@ -913,7 +913,7 @@ body.dark .modal-overlay { background: rgba(0,0,0,0.7); }
 
 /* --- সাপোর্টেড স্টোর স্লাইডার (ফাইনাল) --- */
 .stores-section {
-    padding: 25px 24px;
+    padding: 20px 24px 10px;
     max-width: 1280px;
     margin: 0 auto;
 }
@@ -937,12 +937,9 @@ body.dark .modal-overlay { background: rgba(0,0,0,0.7); }
 
 .store-slider {
     display: flex;
-    gap: 10px;                     /* আপনার চাওয়া 10px */
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    padding: 0 4px;
-    flex: 1;
-    scrollbar-width: none;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
 }
 
 .store-slider::-webkit-scrollbar {
