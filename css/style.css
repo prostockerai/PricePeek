@@ -913,7 +913,7 @@ body.dark .modal-overlay { background: rgba(0,0,0,0.7); }
 
 /* --- সাপোর্টেড স্টোর স্লাইডার (ফাইনাল) --- */
 .stores-section {
-    padding: 40px 24px;
+    padding: 25px 24px;
     max-width: 1280px;
     margin: 0 auto;
 }
