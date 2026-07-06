@@ -178,7 +178,7 @@ function sortResults() {
     applyFiltersAndSort();
 }
 
-// ============ RENDER PRODUCTS ============
+// ============ RENDER PRODUCTS (আপডেটেড – রেটিং/রিভিউ দেখানো) ============
 function renderProducts(products) {
     const grid = document.getElementById('productGrid');
     if (products.length === 0) {
@@ -191,6 +191,15 @@ function renderProducts(products) {
         const isWishlisted = APP_STATE.wishlist.some(w => w.id === product.id);
         const isCompared = APP_STATE.comparisonList.some(c => c.id === product.id);
         const marketplaceClass = getMarketplaceClass(product.marketplace);
+
+        // রেটিং ও রিভিউ তথ্য
+        let metaHTML = '';
+        if (product.rating) {
+            metaHTML += `⭐ ${product.rating}`;
+            if (product.reviewCount) metaHTML += ` (${product.reviewCount} reviews)`;
+            if (product.soldCount) metaHTML += ` • 🔥 ${product.soldCount} sold`;
+        }
+
         return `
             <div class="product-card ${isCheapest ? 'best-choice' : ''}" data-id="${product.id}">
                 ${isCheapest ? '<span class="best-badge">🏆 Best Price</span>' : ''}
@@ -205,9 +214,9 @@ function renderProducts(products) {
                     ${product.originalPrice && product.originalPrice > product.price ? `<span class="original-price">${formatPrice(product.originalPrice)}</span>` : ''}
                     ${product.discount > 0 ? `<span class="discount-badge">-${product.discount}%</span>` : ''}
                 </div>
+                ${metaHTML ? `<div class="product-meta" style="font-size:0.72rem; color:var(--gray-500); margin-top:4px;">${metaHTML}</div>` : ''}
                 <div class="stock-status ${product.inStock ? 'in-stock' : 'out-stock'}">
                     ${product.inStock ? '🟢 In Stock' : '🔴 Out of Stock'}
-                    ${product.rating ? ` • ⭐ ${product.rating}` : ''}
                 </div>
                 ${product.coupons && product.coupons.length > 0 ? `<div class="coupon-row">${product.coupons.map(c => `<span class="coupon-chip" onclick="copyToClipboard('${c.code}')">🎫 ${c.code} (${c.type==='percentage' ? c.discount+'%' : '৳'+c.discount})</span>`).join('')}</div>` : ''}
                 ${product.cashback && product.cashback.length > 0 ? `<div class="coupon-row">${product.cashback.map(c => `<span class="cashback-chip">💰 ${c.provider} ${c.percentage}% (Max ৳${c.maxAmount})</span>`).join('')}</div>` : ''}
@@ -220,7 +229,7 @@ function renderProducts(products) {
     }).join('');
 }
 
-// ============ NEW BEST DEAL FUNCTION (Price, Discount, Rating, Review Count, Sold Count) ============
+// ============ UPDATE BEST DEAL (ক্লিকেবল ব্যানার) ============
 function updateBestDeal(products) {
     const banner = document.getElementById('bestDealBanner');
     const inStock = products.filter(p => p.inStock && p.price);
@@ -229,49 +238,28 @@ function updateBestDeal(products) {
         return;
     }
 
-    // সর্বনিম্ন দাম (score এ ব্যবহার হবে)
-    const minPrice = Math.min(...inStock.map(p => p.price));
-
-    function getScore(product) {
-        let score = 0;
-
-        // 1. দাম – যত কম তত বেশি (সর্বোচ্চ 40 পয়েন্ট)
-        score += (minPrice / (product.price || 1)) * 40;
-
-        // 2. ডিসকাউন্ট – সরাসরি শতকরা * 0.3 (সর্বোচ্চ 30 পয়েন্ট)
-        score += (product.discount || 0) * 0.3;
-
-        // 3. রেটিং – 5 এর মধ্যে (সর্বোচ্চ 15 পয়েন্ট)
-        if (product.rating) {
-            score += (product.rating / 5) * 15;
-        }
-
-        // 4. রিভিউ সংখ্যা – লগ স্কেলে (সর্বোচ্চ 10 পয়েন্ট)
-        if (product.reviewCount) {
-            score += Math.min(Math.log10(product.reviewCount + 1) * 5, 10);
-        }
-
-        // 5. বিক্রির সংখ্যা – লগ স্কেলে (সর্বোচ্চ 5 পয়েন্ট)
-        if (product.soldCount) {
-            score += Math.min(Math.log10(product.soldCount + 1) * 3, 5);
-        }
-
-        return score;
-    }
-
+    // আগের মতো স্কোরিং (রেটিং ও অন্যান্য ফ্যাক্টর এখনও চাইলে যুক্ত করতে পারেন)
     const bestDeal = inStock.reduce((best, current) => {
-        return getScore(current) > getScore(best) ? current : best;
+        const currentScore = (current.discount || 0);
+        const bestScore = (best.discount || 0);
+        return currentScore > bestScore ? current : best;
     });
 
-    banner.style.display = 'flex';
-    document.getElementById('bestDealPrice').textContent =
-        `${formatPrice(bestDeal.price)} at ${bestDeal.marketplace}`;
-
     const savings = bestDeal.originalPrice ? bestDeal.originalPrice - bestDeal.price : 0;
-    document.getElementById('bestDealSavings').textContent =
-        savings > 0
-            ? `Save ${formatPrice(savings)} (${bestDeal.discount}% off)`
-            : 'Best available price!';
+    const savingsText = savings > 0 ? `Save ${formatPrice(savings)} (${bestDeal.discount}% off)` : 'Best available price!';
+
+    // ব্যানারটিকে ক্লিকেবল লিংকে রূপান্তর
+    banner.innerHTML = `
+        <a href="${bestDeal.url || '#'}" target="_blank" style="display:flex; align-items:center; gap:12px; text-decoration:none; color:white; width:100%;">
+            <span class="best-deal-icon">🏆</span>
+            <div class="best-deal-text">
+                <div class="best-deal-title">Best Deal Found!</div>
+                <div class="best-deal-price">${formatPrice(bestDeal.price)} at ${bestDeal.marketplace}</div>
+                <div class="best-deal-savings">${savingsText}</div>
+            </div>
+        </a>
+    `;
+    banner.style.display = 'flex';
 }
 
 // ============ WISHLIST ============
@@ -391,6 +379,7 @@ function compareProducts() {
                     ${createComparisonRow('Discount', p => p.discount > 0 ? `-${p.discount}%` : 'None')}
                     ${createComparisonRow('Status', p => p.inStock ? '🟢 In Stock' : '🔴 Out of Stock')}
                     ${createComparisonRow('Official Store', p => p.isOfficial ? '✅ Yes' : '❌ No')}
+                    ${createComparisonRow('Rating', p => p.rating ? `⭐ ${p.rating} (${p.reviewCount || 0} reviews)` : 'N/A')}
                     ${createComparisonRow('Coupons', p => p.coupons?.map(c => c.code).join(', ') || 'None')}
                     ${createComparisonRow('Cashback', p => p.cashback?.map(c => `${c.provider} ${c.percentage}%`).join(', ') || 'None')}
                 </tbody>
