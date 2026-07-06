@@ -12,7 +12,7 @@ const scrapers = [
 ];
 
 const cache = new Map();
-const CACHE_TTL = 15 * 60 * 1000;
+const CACHE_TTL = 15 * 60 * 1000; // ১৫ মিনিট ক্যাশ
 
 module.exports = async (req, res) => {
   const { q, url } = req.query;
@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
     return res.json({ products: cachedEntry.data, cached: true });
   }
 
-  // 🔑 লম্বা নাম থেকে সংক্ষিপ্ত সার্চ কীওয়ার্ড
+  // গুরুত্বপূর্ণ: লম্বা নাম থেকে ছোট কীওয়ার্ড তৈরি
   const searchQuery = productMatcher.extractSearchKey(q) || q;
   console.log(`Original: "${q}" → Searching: "${searchQuery}"`);
 
@@ -47,7 +47,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  // প্রাপ্ত পণ্যগুলোকে মূল সার্চ টার্মের সাথে সাদৃশ্য অনুযায়ী সাজানো (অপশনাল)
+  // মূল সার্চ টার্মের সাথে সাদৃশ্য অনুযায়ী সাজানো (অপশনাল)
   const originalQuery = q.toLowerCase().trim();
   const scored = results.map(p => {
     const pName = (p.name || '').toLowerCase();
