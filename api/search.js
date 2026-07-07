@@ -1,13 +1,13 @@
 const DarazScraper = require('../lib/daraz');
 const StarTechScraper = require('../lib/startech');
-const RyansScraper = require('../lib/ryans');
+//const RyansScraper = require('../lib/ryans');
 const PickabooScraper = require('../lib/pickaboo');
 const productMatcher = require('../lib/matcher');
 
 const scrapers = [
   new DarazScraper(),
   new StarTechScraper(),
-  new RyansScraper(),
+  //new RyansScraper(),
   new PickabooScraper(),
 ];
 
