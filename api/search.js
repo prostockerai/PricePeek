@@ -1,19 +1,18 @@
-// api/search.js
 const DarazScraper = require('../lib/daraz');
 const StarTechScraper = require('../lib/startech');
-//const RyansScraper = require('../lib/ryans');   // Ryans সাময়িকভাবে বন্ধ
+// const RyansScraper = require('../lib/ryans');   // Ryans সাময়িকভাবে বন্ধ
 const PickabooScraper = require('../lib/pickaboo');
 const productMatcher = require('../lib/matcher');
 
 const scrapers = [
   new DarazScraper(),
   new StarTechScraper(),
-  //new RyansScraper(),
-  new PickabooScraper(),
+  // new RyansScraper(),
+  new PickabooScraper(),   // Pickaboo শুধু URL সার্চে কাজ করে, কীওয়ার্ডে নয়
 ];
 
 const cache = new Map();
-const CACHE_TTL = 15 * 60 * 1000; // ১৫ মিনিট ক্যাশ
+const CACHE_TTL = 15 * 60 * 1000; // ১৫ মিনিট
 
 // URL থেকে পণ্যের নাম বের করার সহায়ক ফাংশন
 function extractProductNameFromUrl(url) {
@@ -74,11 +73,11 @@ module.exports = async (req, res) => {
         };
       }
 
-      // ৩. সোর্স পণ্যের নাম থেকে সার্চ কীওয়ার্ড তৈরি (URL-র জন্য সংক্ষেপণ করা ভালো)
+      // ৩. সোর্স পণ্যের নাম থেকে কীওয়ার্ড তৈরি (অন্য মার্কেটপ্লেসে সার্চ করার জন্য)
       const searchQuery = productMatcher.extractSearchKey(sourceProduct.name);
       console.log(`[URL] Using search key: "${searchQuery}"`);
 
-      // ৪. সব মার্কেটপ্লেসে সেই কীওয়ার্ড দিয়ে সার্চ
+      // ৪. সব মার্কেটপ্লেসে সার্চ
       const results = [];
       const errors = [];
       for (const scraper of scrapers) {
@@ -91,21 +90,26 @@ module.exports = async (req, res) => {
         }
       }
 
-      // ৫. যদি কোনো ফলাফল না আসে, অন্তত সোর্স প্রোডাক্টটি যোগ করো
-      if (results.length === 0 && sourceProduct) {
-        results.push(sourceProduct);
+      // ৫. সোর্স প্রোডাক্ট সবসময় শুরুতে যোগ করা (যদি না থাকে)
+      if (sourceProduct && sourceProduct.name) {
+        const alreadyExists = results.some(p => p.url === sourceProduct.url);
+        if (!alreadyExists) {
+          results.unshift(sourceProduct);
+        }
       }
 
-      // ৬. মূল পণ্যের সাথে সাদৃশ্য অনুযায়ী সাজানো (বেশি মিল উপরে)
-      const originalQuery = sourceProduct.name.toLowerCase().trim();
-      const scored = results.map(p => {
+      // ৬. মূল পণ্যের সাথে সাদৃশ্য অনুযায়ী সাজানো (সোর্স প্রোডাক্ট উপরে)
+      if (sourceProduct) sourceProduct._sim = 1;
+      const originalQuery = sourceProduct ? sourceProduct.name.toLowerCase().trim() : '';
+      results.forEach(p => {
+        if (p._sim !== undefined) return;
         const pName = (p.name || '').toLowerCase();
         const tokens = originalQuery.split(/\s+/);
         const matchCount = tokens.filter(t => pName.includes(t)).length;
-        return { ...p, _sim: matchCount / tokens.length };
+        p._sim = tokens.length ? matchCount / tokens.length : 0;
       });
-      scored.sort((a, b) => b._sim - a._sim);
-      const finalProducts = scored.map(({ _sim, ...p }) => p);
+      results.sort((a, b) => b._sim - a._sim);
+      const finalProducts = results.map(({ _sim, ...p }) => p);
 
       return res.json({
         products: finalProducts,
@@ -128,15 +132,14 @@ module.exports = async (req, res) => {
     return res.json({ products: cachedEntry.data, cached: true });
   }
 
-  // 🔥 গুরুত্বপূর্ণ: কীওয়ার্ড সার্চে ইউজারের পুরো শব্দই ব্যবহার করা হবে (কোনো ছাঁটাই নয়)
-  const searchQuery = q;
+  // ইউজার যা লিখেছে, সরাসরি তাই পাঠানো (কোনো সংক্ষেপণ নয়)
   console.log(`Original query: "${q}"`);
 
   const results = [];
   const errors = [];
   for (const scraper of scrapers) {
     try {
-      const prods = await scraper.search(searchQuery);
+      const prods = await scraper.search(q);
       results.push(...prods);
       console.log(`[${scraper.marketplace}] Found ${prods.length} products`);
     } catch (err) {
