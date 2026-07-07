@@ -32,6 +32,36 @@ function extractProductNameFromUrl(url) {
 module.exports = async (req, res) => {
   const { q, url } = req.query;
 
+
+
+
+
+
+
+
+
+  // ----- অস্থায়ী ডিবাগ (Ryans HTML দেখার জন্য) -----
+  if (req.query.debug === 'ryans' && q) {
+    const ryansScraper = new RyansScraper();
+    const debugUrl = `https://www.ryans.com/search?search=${encodeURIComponent(q)}`;
+    const html = await ryansScraper.fetchPage(debugUrl);
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    return res.send(html || 'HTML fetch returned null');
+  }
+  // ---------------------------------------------------
+
+
+
+
+
+
+
+  
+
+
+
+
+  
   // --- URL মোড ---
   if (url) {
     try {
