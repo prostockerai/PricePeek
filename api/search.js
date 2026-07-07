@@ -37,7 +37,29 @@ module.exports = async (req, res) => {
 
 
   // ----- অস্থায়ী ডিবাগ: Pickaboo পণ্যের পেজ ফেচ -----
-  
+    if (req.query.debug === 'pickaboo-api' && q) {
+    const axios = require('axios');
+    const apiUrl = `https://www.pickaboo.com/search/ajax/getresults?api_key=6W7Z0N7U0T&q=${encodeURIComponent(q)}&startIndex=0`;
+    try {
+      const response = await axios.get(apiUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        timeout: 15000,
+      });
+      return res.json({
+        status: response.status,
+        totalItems: response.data?.totalItems,
+        itemsCount: response.data?.items?.length,
+        firstItem: response.data?.items?.[0]?.title,
+      });
+    } catch (err) {
+      return res.status(500).json({
+        error: err.message,
+        code: err.code,
+        status: err.response?.status,
+        data: err.response?.data,
+      });
+    }
+  }
   // ---------------------------------------------------
 
 
