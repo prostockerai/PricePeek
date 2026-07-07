@@ -30,6 +30,58 @@ function extractProductNameFromUrl(url) {
 module.exports = async (req, res) => {
   const { q, url } = req.query;
 
+
+
+
+
+
+
+
+
+
+
+
+
+// ----- Pickaboo ডিবাগ (HTML দেখার জন্য) -----
+  if (req.query.debug === 'pickaboo' && q) {
+    const axios = require('axios');
+    const debugUrl = `https://www.pickaboo.com/catalogsearch/result/?q=${encodeURIComponent(q)}`;
+    try {
+      const response = await axios.get(debugUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+        },
+        timeout: 15000,
+      });
+      const html = response.data;
+      const snippet = html.substring(0, 2000); // প্রথম ২০০০ অক্ষর
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.send(
+        `Status: ${response.status}\n` +
+        `HTML Length: ${html.length}\n` +
+        `First 2000 chars:\n${snippet}`
+      );
+    } catch (err) {
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.send(`Error: ${err.message}`);
+    }
+  }
+  // ---------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
   // --- URL মোড (আপডেটেড) ---
   if (url) {
     try {
