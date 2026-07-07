@@ -1,14 +1,14 @@
 const DarazScraper = require('../lib/daraz');
 const StarTechScraper = require('../lib/startech');
 // const RyansScraper = require('../lib/ryans');   // Ryans সাময়িকভাবে বন্ধ
-const PickabooScraper = require('../lib/pickaboo');
+const RokomariScraper = require('../lib/rokomari');
 const productMatcher = require('../lib/matcher');
 
 const scrapers = [
   new DarazScraper(),
   new StarTechScraper(),
   // new RyansScraper(),
-  new PickabooScraper(),   // Pickaboo শুধু URL সার্চে কাজ করে, কীওয়ার্ডে নয়
+  new RokomariScraper(),
 ];
 
 const cache = new Map();
