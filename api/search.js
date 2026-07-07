@@ -1,3 +1,4 @@
+// api/search.js (পরিষ্কার ভার্সন)
 const DarazScraper = require('../lib/daraz');
 const StarTechScraper = require('../lib/startech');
 //const RyansScraper = require('../lib/ryans');
@@ -14,7 +15,6 @@ const scrapers = [
 const cache = new Map();
 const CACHE_TTL = 15 * 60 * 1000;
 
-// URL থেকে পণ্যের নাম বের করার সহায়ক ফাংশন
 function extractProductNameFromUrl(url) {
   try {
     const { pathname } = new URL(url);
@@ -30,65 +30,12 @@ function extractProductNameFromUrl(url) {
 module.exports = async (req, res) => {
   const { q, url } = req.query;
 
-
-
-
-
-
-
-
-
-
-
-
-
-// ----- Pickaboo ডিবাগ (HTML দেখার জন্য) -----
-  if (req.query.debug === 'pickaboo' && q) {
-    const axios = require('axios');
-    const debugUrl = `https://www.pickaboo.com/catalogsearch/result/?q=${encodeURIComponent(q)}`;
-    try {
-      const response = await axios.get(debugUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml',
-        },
-        timeout: 15000,
-      });
-      const html = response.data;
-      const snippet = html.substring(0, 2000); // প্রথম ২০০০ অক্ষর
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      return res.send(
-        `Status: ${response.status}\n` +
-        `HTML Length: ${html.length}\n` +
-        `First 2000 chars:\n${snippet}`
-      );
-    } catch (err) {
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      return res.send(`Error: ${err.message}`);
-    }
-  }
-  // ---------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  // --- URL মোড (আপডেটেড) ---
+  // --- URL মোড ---
   if (url) {
     try {
       const decodedUrl = decodeURIComponent(url);
       let sourceProduct = null;
 
-      // ১. প্রথমে URL-এর ডোমেইন দেখে সংশ্লিষ্ট স্ক্র‍্যাপার দিয়ে পণ্যের সম্পূর্ণ তথ্য আনা
       for (const scraper of scrapers) {
         const baseHost = scraper.baseUrl.replace('https://', '').replace('http://', '');
         if (decodedUrl.includes(baseHost)) {
@@ -97,14 +44,12 @@ module.exports = async (req, res) => {
         }
       }
 
-      // ২. যদি scraper ব্যর্থ হয়, তবে URL থেকে নাম নিয়ে একটি ন্যূনতম অবজেক্ট তৈরি
       if (!sourceProduct || !sourceProduct.name) {
         const productNameFromUrl = extractProductNameFromUrl(decodedUrl);
         if (!productNameFromUrl) {
           return res.json({ products: [], errors: [{ message: 'URL থেকে পণ্যের নাম বের করা যায়নি' }] });
         }
 
-        // ডোমেইন থেকে মার্কেটপ্লেসের নাম অনুমান
         let marketplaceGuess = 'Unknown';
         try {
           const host = new URL(decodedUrl).hostname.replace('www.', '');
@@ -125,11 +70,9 @@ module.exports = async (req, res) => {
         };
       }
 
-      // ৩. সোর্স পণ্যের নাম থেকে সার্চ কীওয়ার্ড তৈরি
       const searchQuery = productMatcher.extractSearchKey(sourceProduct.name);
       console.log(`[URL] Using search key: "${searchQuery}"`);
 
-      // ৪. সব মার্কেটপ্লেসে সেই কীওয়ার্ড দিয়ে সার্চ
       const results = [];
       const errors = [];
       for (const scraper of scrapers) {
@@ -142,12 +85,10 @@ module.exports = async (req, res) => {
         }
       }
 
-      // ৫. যদি কোনো পণ্য না পাওয়া যায়, অন্তত সোর্স প্রোডাক্টটি রেজাল্টে যোগ করো
       if (results.length === 0 && sourceProduct) {
         results.push(sourceProduct);
       }
 
-      // ৬. মূল পণ্যের সাথে সাদৃশ্য অনুযায়ী সাজানো (অপশনাল)
       const originalQuery = sourceProduct.name.toLowerCase().trim();
       const scored = results.map(p => {
         const pName = (p.name || '').toLowerCase();
