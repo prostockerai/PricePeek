@@ -40,13 +40,18 @@ module.exports = async (req, res) => {
 
 
 
-  // ----- অস্থায়ী ডিবাগ (Ryans HTML দেখার জন্য) -----
+   // ----- অস্থায়ী ডিবাগ (Ryans HTML ও ত্রুটি দেখার জন্য) -----
   if (req.query.debug === 'ryans' && q) {
     const ryansScraper = new RyansScraper();
     const debugUrl = `https://www.ryans.com/search?search=${encodeURIComponent(q)}`;
-    const html = await ryansScraper.fetchPage(debugUrl);
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    return res.send(html || 'HTML fetch returned null');
+    try {
+      const html = await ryansScraper.fetchPage(debugUrl);
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.send(html || 'HTML fetch returned null (no error)');
+    } catch (err) {
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.send('Error: ' + err.message + '\n\n' + (err.stack || ''));
+    }
   }
   // ---------------------------------------------------
 
