@@ -76,6 +76,16 @@ module.exports = async (req, res) => {
         inStock: true,
       };
 
+
+
+      // যদি কোনো পণ্য না পাওয়া যায়, অন্তত সোর্স প্রোডাক্টটি অ্যাড করো
+      if (results.length === 0 && sourceProduct) {
+        results.push(sourceProduct);
+      }
+
+
+
+      
       return res.json({
         products: results,
         sourceProduct,
