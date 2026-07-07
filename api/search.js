@@ -37,32 +37,7 @@ module.exports = async (req, res) => {
 
 
   // ----- অস্থায়ী ডিবাগ: Pickaboo পণ্যের পেজ ফেচ -----
-  if (req.query.debug === 'pickaboo-product' && req.query.url) {
-    const axios = require('axios');
-    const testUrl = decodeURIComponent(req.query.url);
-    try {
-      const response = await axios.get(testUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml',
-        },
-        timeout: 15000,
-      });
-      const html = response.data;
-      const snippet = html.substring(0, 3000);
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      return res.send(
-        `Status: ${response.status}\n` +
-        `HTML Length: ${html.length}\n` +
-        `Contains "dsn__main-image-container": ${html.includes('dsn__main-image-container')}\n` +
-        `Contains "price-view": ${html.includes('price-view')}\n` +
-        `First 3000 chars:\n${snippet}`
-      );
-    } catch (err) {
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      return res.send(`Error: ${err.message}`);
-    }
-  }
+  
   // ---------------------------------------------------
 
 
@@ -114,9 +89,17 @@ module.exports = async (req, res) => {
         };
       }
 
-      // ৩. সোর্স পণ্যের নাম থেকে কীওয়ার্ড তৈরি (অন্য মার্কেটপ্লেসে সার্চ করার জন্য)
-      const searchQuery = productMatcher.extractSearchKey(sourceProduct.name);
-      console.log(`[URL] Using search key: "${searchQuery}"`);
+      // ৩. সোর্স পণ্যের নাম থেকে একাধিক কীওয়ার্ড তৈরি (একটার পর একটা ট্রাই করা)
+let searchQuery = productMatcher.extractSearchKey(sourceProduct.name);
+if (!searchQuery || searchQuery.length < 3) {
+  // যদি extractSearchKey খুব ছোট বা খালি দেয়, তাহলে পুরো নাম থেকে সাধারণ শব্দ নিই
+  searchQuery = sourceProduct.name.replace(/[^a-zA-Z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  // প্রথম 4 টি শব্দ নেওয়া
+  const words = searchQuery.split(' ').slice(0, 4).join(' ');
+  searchQuery = words || sourceProduct.name;
+}
+console.log(`[URL] Using search key: "${searchQuery}"`);
+      
 
       // ৪. সব মার্কেটপ্লেসে সার্চ
       const results = [];
