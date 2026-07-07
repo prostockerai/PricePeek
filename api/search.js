@@ -40,22 +40,32 @@ module.exports = async (req, res) => {
 
 
 
-   // ----- অস্থায়ী ডিবাগ (Ryans HTML ও ত্রুটি দেখার জন্য) -----
+    // ----- অস্থায়ী ডিবাগ (Ryans HTML ও ত্রুটি বিস্তারিত) -----
   if (req.query.debug === 'ryans' && q) {
-    const ryansScraper = new RyansScraper();
-    const debugUrl = `https://www.ryans.com/search?search=${encodeURIComponent(q)}`;
+    const axios = require('axios');
+    const url = `https://www.ryans.com/search?search=${encodeURIComponent(q)}`;
     try {
-      const html = await ryansScraper.fetchPage(debugUrl);
+      const response = await axios.get(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+        },
+        timeout: 15000,
+      });
+      const html = response.data;
+      const snippet = html.substring(0, 1000);
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      return res.send(html || 'HTML fetch returned null (no error)');
+      return res.send(
+        `Status: ${response.status}\n` +
+        `HTML Length: ${html.length}\n` +
+        `First 1000 chars:\n${snippet}`
+      );
     } catch (err) {
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      return res.send('Error: ' + err.message + '\n\n' + (err.stack || ''));
+      return res.send(`Error: ${err.message}`);
     }
   }
-  // ---------------------------------------------------
-
-
+  // --------------------------------------------------- 
 
 
 
