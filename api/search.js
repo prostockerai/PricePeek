@@ -18,10 +18,8 @@ const CACHE_TTL = 15 * 60 * 1000;
 function extractProductNameFromUrl(url) {
   try {
     const { pathname } = new URL(url);
-    // শেষ অংশটি নিন, হাইফেন/আন্ডারস্কোর দিয়ে ভাগ করা শব্দগুলোকে জোড়া দিন
     const lastSegment = pathname.split('/').filter(Boolean).pop();
     if (!lastSegment) return '';
-    // "-" এবং "_" সরিয়ে ক্লিন টেক্সট তৈরি
     const cleaned = lastSegment.replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
     return cleaned;
   } catch (e) {
@@ -32,29 +30,54 @@ function extractProductNameFromUrl(url) {
 module.exports = async (req, res) => {
   const { q, url } = req.query;
 
-
-
-  // --- URL মোড ---
+  // --- URL মোড (আপডেটেড) ---
   if (url) {
     try {
       const decodedUrl = decodeURIComponent(url);
+      let sourceProduct = null;
 
-      // প্রথমে URL থেকে পণ্যের নাম বের করার চেষ্টা
-      const productNameFromUrl = extractProductNameFromUrl(decodedUrl);
-      console.log(`[URL] Extracted name from URL: "${productNameFromUrl}"`);
-
-      // পণ্যের নাম থেকে সার্চ কীওয়ার্ড তৈরি
-      const searchQuery = productNameFromUrl 
-        ? productMatcher.extractSearchKey(productNameFromUrl) 
-        : '';
-
-      if (!searchQuery) {
-        return res.json({ products: [], errors: [{ message: 'URL থেকে পণ্যের নাম বের করা যায়নি' }] });
+      // ১. প্রথমে URL-এর ডোমেইন দেখে সংশ্লিষ্ট স্ক্র‍্যাপার দিয়ে পণ্যের সম্পূর্ণ তথ্য আনা
+      for (const scraper of scrapers) {
+        const baseHost = scraper.baseUrl.replace('https://', '').replace('http://', '');
+        if (decodedUrl.includes(baseHost)) {
+          sourceProduct = await scraper.getProductFromUrl(decodedUrl);
+          break;
+        }
       }
 
+      // ২. যদি scraper ব্যর্থ হয়, তবে URL থেকে নাম নিয়ে একটি ন্যূনতম অবজেক্ট তৈরি
+      if (!sourceProduct || !sourceProduct.name) {
+        const productNameFromUrl = extractProductNameFromUrl(decodedUrl);
+        if (!productNameFromUrl) {
+          return res.json({ products: [], errors: [{ message: 'URL থেকে পণ্যের নাম বের করা যায়নি' }] });
+        }
+
+        // ডোমেইন থেকে মার্কেটপ্লেসের নাম অনুমান
+        let marketplaceGuess = 'Unknown';
+        try {
+          const host = new URL(decodedUrl).hostname.replace('www.', '');
+          const parts = host.split('.');
+          if (parts.length >= 2) marketplaceGuess = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+        } catch (e) {}
+
+        sourceProduct = {
+          name: productNameFromUrl,
+          url: decodedUrl,
+          marketplace: marketplaceGuess,
+          price: null,
+          originalPrice: null,
+          image: null,
+          inStock: true,
+          coupons: [],
+          cashback: [],
+        };
+      }
+
+      // ৩. সোর্স পণ্যের নাম থেকে সার্চ কীওয়ার্ড তৈরি
+      const searchQuery = productMatcher.extractSearchKey(sourceProduct.name);
       console.log(`[URL] Using search key: "${searchQuery}"`);
 
-      // সব মার্কেটপ্লেসে সেই কীওয়ার্ড দিয়ে সার্চ
+      // ৪. সব মার্কেটপ্লেসে সেই কীওয়ার্ড দিয়ে সার্চ
       const results = [];
       const errors = [];
       for (const scraper of scrapers) {
@@ -67,27 +90,24 @@ module.exports = async (req, res) => {
         }
       }
 
-      // সোর্স প্রোডাক্ট হিসেবে একটি অবজেক্ট তৈরি করা (যাতে ফ্রন্টএন্ডে দেখানোর মতো কিছু থাকে)
-      const sourceProduct = {
-        name: productNameFromUrl,
-        url: decodedUrl,
-        marketplace: 'Unknown (from URL)',
-        price: null,
-        inStock: true,
-      };
-
-
-
-      // যদি কোনো পণ্য না পাওয়া যায়, অন্তত সোর্স প্রোডাক্টটি অ্যাড করো
+      // ৫. যদি কোনো পণ্য না পাওয়া যায়, অন্তত সোর্স প্রোডাক্টটি রেজাল্টে যোগ করো
       if (results.length === 0 && sourceProduct) {
         results.push(sourceProduct);
       }
 
+      // ৬. মূল পণ্যের সাথে সাদৃশ্য অনুযায়ী সাজানো (অপশনাল)
+      const originalQuery = sourceProduct.name.toLowerCase().trim();
+      const scored = results.map(p => {
+        const pName = (p.name || '').toLowerCase();
+        const tokens = originalQuery.split(/\s+/);
+        const matchCount = tokens.filter(t => pName.includes(t)).length;
+        return { ...p, _sim: matchCount / tokens.length };
+      });
+      scored.sort((a, b) => b._sim - a._sim);
+      const finalProducts = scored.map(({ _sim, ...p }) => p);
 
-
-      
       return res.json({
-        products: results,
+        products: finalProducts,
         sourceProduct,
         errors: errors.length > 0 ? errors : undefined,
         cached: false,
