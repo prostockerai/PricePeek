@@ -1,7 +1,7 @@
-// api/search.js (পরিষ্কার ভার্সন)
+// api/search.js
 const DarazScraper = require('../lib/daraz');
 const StarTechScraper = require('../lib/startech');
-//const RyansScraper = require('../lib/ryans');
+//const RyansScraper = require('../lib/ryans');   // Ryans সাময়িকভাবে বন্ধ
 const PickabooScraper = require('../lib/pickaboo');
 const productMatcher = require('../lib/matcher');
 
@@ -13,8 +13,9 @@ const scrapers = [
 ];
 
 const cache = new Map();
-const CACHE_TTL = 15 * 60 * 1000;
+const CACHE_TTL = 15 * 60 * 1000; // ১৫ মিনিট ক্যাশ
 
+// URL থেকে পণ্যের নাম বের করার সহায়ক ফাংশন
 function extractProductNameFromUrl(url) {
   try {
     const { pathname } = new URL(url);
@@ -30,12 +31,13 @@ function extractProductNameFromUrl(url) {
 module.exports = async (req, res) => {
   const { q, url } = req.query;
 
-  // --- URL মোড ---
+  // ================== URL মোড ==================
   if (url) {
     try {
       const decodedUrl = decodeURIComponent(url);
       let sourceProduct = null;
 
+      // ১. পণ্যের পেজ থেকে সম্পূর্ণ তথ্য আনার চেষ্টা (সংশ্লিষ্ট স্ক্র‍্যাপার দিয়ে)
       for (const scraper of scrapers) {
         const baseHost = scraper.baseUrl.replace('https://', '').replace('http://', '');
         if (decodedUrl.includes(baseHost)) {
@@ -44,12 +46,14 @@ module.exports = async (req, res) => {
         }
       }
 
+      // ২. যদি scraper ব্যর্থ হয়, তাহলে URL থেকেই নাম নিয়ে ন্যূনতম অবজেক্ট তৈরি
       if (!sourceProduct || !sourceProduct.name) {
         const productNameFromUrl = extractProductNameFromUrl(decodedUrl);
         if (!productNameFromUrl) {
           return res.json({ products: [], errors: [{ message: 'URL থেকে পণ্যের নাম বের করা যায়নি' }] });
         }
 
+        // ডোমেইন থেকে মার্কেটপ্লেসের নাম অনুমান
         let marketplaceGuess = 'Unknown';
         try {
           const host = new URL(decodedUrl).hostname.replace('www.', '');
@@ -70,9 +74,11 @@ module.exports = async (req, res) => {
         };
       }
 
+      // ৩. সোর্স পণ্যের নাম থেকে সার্চ কীওয়ার্ড তৈরি (URL-র জন্য সংক্ষেপণ করা ভালো)
       const searchQuery = productMatcher.extractSearchKey(sourceProduct.name);
       console.log(`[URL] Using search key: "${searchQuery}"`);
 
+      // ৪. সব মার্কেটপ্লেসে সেই কীওয়ার্ড দিয়ে সার্চ
       const results = [];
       const errors = [];
       for (const scraper of scrapers) {
@@ -85,10 +91,12 @@ module.exports = async (req, res) => {
         }
       }
 
+      // ৫. যদি কোনো ফলাফল না আসে, অন্তত সোর্স প্রোডাক্টটি যোগ করো
       if (results.length === 0 && sourceProduct) {
         results.push(sourceProduct);
       }
 
+      // ৬. মূল পণ্যের সাথে সাদৃশ্য অনুযায়ী সাজানো (বেশি মিল উপরে)
       const originalQuery = sourceProduct.name.toLowerCase().trim();
       const scored = results.map(p => {
         const pName = (p.name || '').toLowerCase();
@@ -111,7 +119,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  // --- সাধারণ সার্চ (q) ---
+  // ================== সাধারণ কীওয়ার্ড সার্চ ==================
   if (!q) return res.status(400).json({ error: 'q or url parameter required' });
 
   const cacheKey = `search:${q}`;
@@ -120,8 +128,9 @@ module.exports = async (req, res) => {
     return res.json({ products: cachedEntry.data, cached: true });
   }
 
-  const searchQuery = productMatcher.extractSearchKey(q) || q;
-  console.log(`Original: "${q}" -> Searching: "${searchQuery}"`);
+  // 🔥 গুরুত্বপূর্ণ: কীওয়ার্ড সার্চে ইউজারের পুরো শব্দই ব্যবহার করা হবে (কোনো ছাঁটাই নয়)
+  const searchQuery = q;
+  console.log(`Original query: "${q}"`);
 
   const results = [];
   const errors = [];
@@ -129,11 +138,13 @@ module.exports = async (req, res) => {
     try {
       const prods = await scraper.search(searchQuery);
       results.push(...prods);
+      console.log(`[${scraper.marketplace}] Found ${prods.length} products`);
     } catch (err) {
       errors.push({ marketplace: scraper.marketplace, error: err.message });
     }
   }
 
+  // প্রাপ্ত ফলাফলকে মূল সার্চ টার্মের সাথে সাদৃশ্য অনুযায়ী সাজানো (বেশি মিল উপরে)
   const originalQuery = q.toLowerCase().trim();
   const scored = results.map(p => {
     const pName = (p.name || '').toLowerCase();
