@@ -30,6 +30,47 @@ function extractProductNameFromUrl(url) {
 module.exports = async (req, res) => {
   const { q, url } = req.query;
 
+
+
+
+
+
+
+  // ----- অস্থায়ী ডিবাগ: Pickaboo পণ্যের পেজ ফেচ -----
+  if (req.query.debug === 'pickaboo-product' && req.query.url) {
+    const axios = require('axios');
+    const testUrl = decodeURIComponent(req.query.url);
+    try {
+      const response = await axios.get(testUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+        },
+        timeout: 15000,
+      });
+      const html = response.data;
+      const snippet = html.substring(0, 3000);
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.send(
+        `Status: ${response.status}\n` +
+        `HTML Length: ${html.length}\n` +
+        `Contains "dsn__main-image-container": ${html.includes('dsn__main-image-container')}\n` +
+        `Contains "price-view": ${html.includes('price-view')}\n` +
+        `First 3000 chars:\n${snippet}`
+      );
+    } catch (err) {
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.send(`Error: ${err.message}`);
+    }
+  }
+  // ---------------------------------------------------
+
+
+
+
+
+
+  
   // ================== URL মোড ==================
   if (url) {
     try {
